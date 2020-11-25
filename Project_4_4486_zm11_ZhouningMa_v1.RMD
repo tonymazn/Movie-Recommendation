@@ -1,0 +1,83 @@
+---
+title: "Project 4: Movie Recommendation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## data: https://grouplens.org/datasets/movielens/
+
+```{r include=FALSE}
+library(recommenderlab)
+library(ggplot2)
+library(data.table)
+library(reshape2)
+```
+
+```{r}
+movies <- read.csv("data/ml-latest-small/movies.csv",stringsAsFactors=FALSE)
+ratings <- read.csv("data/ml-latest-small/ratings.csv")
+#links <- read.csv("..\data\ml-latest-small\links.csv")
+#tags <- read.csv("..\data\ml-latest-small\tags.csv")
+```
+
+
+```{r}
+
+head(movies)
+head(ratings)
+
+## Data pre-processing
+genres <- as.data.frame(movies$genres, stringsAsFactors=FALSE)
+genres2 <- as.data.frame(tstrsplit(genres[,1], '[|]', type.convert=TRUE), stringsAsFactors=FALSE)
+colnames(genres2) <- c(1:10)
+
+genre_list <- c("Action", "Adventure", "Animation", "Children", 
+                "Comedy", "Crime","Documentary", "Drama", "Fantasy",
+                "Film-Noir", "Horror", "Musical", "Mystery","Romance",
+                "Sci-Fi", "Thriller", "War", "Western")
+
+
+
+genre_matrix <- matrix(0,nrow(movies) + 1,18) #empty matrix, 10330=no of movies+1, 18=no of genres
+genre_matrix[1,] <- genre_list #set first row to genre list
+colnames(genre_matrix) <- genre_list #set column names to genre list
+
+#iterate through matrix
+for (i in 1:nrow(genres2)) {
+  for (c in 1:ncol(genres2)) {
+    genmat_col = which(genre_matrix[1,] == genres2[i,c])
+    genre_matrix[i+1,genmat_col] <- 1
+  }
+}
+
+#convert into dataframe
+genre_matrix2 <- as.data.frame(genre_matrix[-1,], stringsAsFactors=FALSE) #remove first row, which was the genre list
+for (c in 1:ncol(genre_matrix2)) {
+  genre_matrix2[,c] <- as.integer(genre_matrix2[,c])
+} #convert from characters to integers
+
+
+
+#Create a matrix to search for a movie by genre:
+years <- as.data.frame(movies$title, stringsAsFactors=FALSE)
+library(data.table)
+substrRight <- function(x, n){
+  substr(x, nchar(x)-n+1, nchar(x))
+}
+years <- as.data.frame(substr(substrRight(substrRight(years$`movies$title`, 6),5),1,4))
+
+search_matrix <- cbind(movies[,1], substr(movies[,2],1,nchar(movies[,2])-6), years, genre_matrix2)
+colnames(search_matrix) <- c("movieId", "title", "year", genre_list)
+
+
+write.csv(search_matrix, "search.csv")
+search_matrix <- read.csv("search.csv", stringsAsFactors=FALSE)
+
+# Example of search an Action movie produced in 1995:
+subset(search_matrix, Action == 1 & year == 1995)$title
+
+```
