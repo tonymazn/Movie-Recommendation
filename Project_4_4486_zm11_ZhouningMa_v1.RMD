@@ -38,13 +38,12 @@ read <- function(fileName, separators) {
 }
 
 
-movies = read("data/movies.dat", "::")
-
-ratings = read("data/ratings.dat", "::")
-
-users = read("data/users.dat", "::")
+basedir ="data/test/"
+movies = read(paste0(basedir,"movies.dat"), "::")
+ratings = read(paste0(basedir,"ratings.dat"), "::")
+users = read(paste0(basedir, "users.dat"), "::")
 #users = users[, -c(2,4,6,8)] # skip columns
-colnames(movies) = c('movieId', 'title', 'genres')
+colnames(movies) = c('MovieID', 'title', 'genres')
 colnames(ratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
 colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
 ```
@@ -111,7 +110,7 @@ length(genre_matrix2)
 
 search_matrix <- cbind(movies[,1], substr(movies[,2],1,nchar(movies[,2])-6), years, genre_matrix2)
 
-colnames(search_matrix) <- c("movieId", "title", "year", genre_list)
+colnames(search_matrix) <- c("MovieID", "title", "year", genre_list)
 
 
 write.csv(search_matrix, "search.csv")
@@ -123,7 +122,6 @@ subset(search_matrix, Action == 1 & year == 1995)$title
 
 
 ```
-
 
 
 ```{r}
@@ -145,39 +143,45 @@ for (i in 1:nrow(binaryratings)){
 }
 
 # convert binaryratings matrix to the correct format:
-binaryratings2 <- dcast(binaryratings, movieId~userId, value.var = "rating", na.rm=FALSE)
+binaryratings2 <- dcast(binaryratings, MovieID~UserID, value.var = "Rating", na.rm=FALSE)
 head(binaryratings2)
 
 
 for (i in 1:ncol(binaryratings2)){
   binaryratings2[which(is.na(binaryratings2[,i]) == TRUE),i] <- 0
 }
-binaryratings2 = binaryratings2[,-1] #remove movieIds col. Rows are movieIds, cols are userIds
+binaryratings2 = binaryratings2[,-1] #remove MovieIDs col. Rows are MovieIDs, cols are userIds
 head(binaryratings2)
 
 
 #Remove rows that are not rated from movies dataset
-movieIds <- length(unique(movies$movieId)) #10329
-ratingmovieIds <- length(unique(ratings$movieId)) #10325
-movies2 <- movies[-which((movies$movieId %in% ratings$movieId) == FALSE),]
+MovieIDs <- length(unique(movies$MovieID)) #10329
+ratingMovieIDs <- length(unique(ratings$MovieID)) #10325
+movies2 <- movies[-which((movies$MovieID %in% ratings$MovieID) == FALSE),]
 rownames(movies2) <- NULL
 
-
 #Remove rows that are not rated from genre_matrix2
-genre_matrix3 <- genre_matrix2[-which((movies$movieId %in% ratings$movieId) == FALSE),]
+genre_matrix3 <- genre_matrix2[-which((movies$MovieID %in% ratings$MovieID) == FALSE),]
 rownames(genre_matrix3) <- NULL
 
 # calculate the dot product of the genre matrix and 
 # the ratings matrix and obtain the user profiles
 
+
+
+### non-numeric argument to binary operator calls Error !!!!!
+
+
 #Calculate dot product for User Profiles
 #result = matrix(0,18,668) # here, 668=no of users/raters, 18=no of genres
-result = matrix(0,18,6040) 
+result = matrix(0,18,nrow(users)) 
 for (c in 1:ncol(binaryratings2)){
   for (i in 1:ncol(genre_matrix3)){
     result[i,c] <- sum((genre_matrix3[,i]) * (binaryratings2[,c])) #ratings per genre
   }
 }
+
+### non-numeric argument to binary operator calls Error !!!!!
 
 #Convert to Binary scale
 for (c in 1:ncol(result)){
@@ -192,7 +196,11 @@ for (c in 1:ncol(result)){
 }
 #head(result)
 
+
+
 ```
+
+
 
 
 
