@@ -18,6 +18,16 @@ library(reshape2)
 ```
 
 ```{r}
+#movies <- read.csv("data/ml-latest-small/movies.csv",stringsAsFactors=FALSE)
+#ratings <- read.csv("data/ml-latest-small/ratings.csv")
+#links <- read.csv("..\data\ml-latest-small\links.csv")
+#tags <- read.csv("..\data\ml-latest-small\tags.csv")
+
+
+```
+
+
+```{r}
 read <- function(fileName, separators) {
     data <- readLines(con <- file(fileName))
     close(con)
@@ -27,29 +37,16 @@ read <- function(fileName, separators) {
     return(as.data.frame(dataFrame,stringsAsFactors = FALSE))
 }
 
-#movies <- read.csv("data/ml-latest-small/movies.csv",stringsAsFactors=FALSE)
-#ratings <- read.csv("data/ml-latest-small/ratings.csv")
-#links <- read.csv("..\data\ml-latest-small\links.csv")
-#tags <- read.csv("..\data\ml-latest-small\tags.csv")
-
-
-#movies = read.csv("data/movies.dat", 
-#                   sep = ':',
-#                   header = FALSE,
-#                   colClasses = c('character', 'NULL'), 
-#                   stringsAsFactors=FALSE)
-
 
 movies = read("data/movies.dat", "::")
 
-ratings = read.csv("data/ratings.dat", 
-                   sep = ':',
-                   header = FALSE,
-                   colClasses = c('integer', 'NULL'), 
-                   stringsAsFactors=FALSE)
+ratings = read("data/ratings.dat", "::")
 
+users = read("data/users.dat", "::")
+#users = users[, -c(2,4,6,8)] # skip columns
 colnames(movies) = c('movieId', 'title', 'genres')
 colnames(ratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
+colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
 ```
 
 
@@ -126,6 +123,80 @@ subset(search_matrix, Action == 1 & year == 1995)$title
 
 
 ```
+
+
+
+```{r}
+## Create a user profile
+binaryratings <- ratings
+
+# ratings of 4 and 5 are mapped to 1, 
+# representing likes, and ratings of 3 
+# and below are mapped to -1, representing 
+# dislikes:
+
+for (i in 1:nrow(binaryratings)){
+  if (binaryratings[i,3] > 3){
+    binaryratings[i,3] <- 1
+  }
+  else{
+    binaryratings[i,3] <- -1
+  }
+}
+
+# convert binaryratings matrix to the correct format:
+binaryratings2 <- dcast(binaryratings, movieId~userId, value.var = "rating", na.rm=FALSE)
+head(binaryratings2)
+
+
+for (i in 1:ncol(binaryratings2)){
+  binaryratings2[which(is.na(binaryratings2[,i]) == TRUE),i] <- 0
+}
+binaryratings2 = binaryratings2[,-1] #remove movieIds col. Rows are movieIds, cols are userIds
+head(binaryratings2)
+
+
+#Remove rows that are not rated from movies dataset
+movieIds <- length(unique(movies$movieId)) #10329
+ratingmovieIds <- length(unique(ratings$movieId)) #10325
+movies2 <- movies[-which((movies$movieId %in% ratings$movieId) == FALSE),]
+rownames(movies2) <- NULL
+
+
+#Remove rows that are not rated from genre_matrix2
+genre_matrix3 <- genre_matrix2[-which((movies$movieId %in% ratings$movieId) == FALSE),]
+rownames(genre_matrix3) <- NULL
+
+# calculate the dot product of the genre matrix and 
+# the ratings matrix and obtain the user profiles
+
+#Calculate dot product for User Profiles
+#result = matrix(0,18,668) # here, 668=no of users/raters, 18=no of genres
+result = matrix(0,18,6040) 
+for (c in 1:ncol(binaryratings2)){
+  for (i in 1:ncol(genre_matrix3)){
+    result[i,c] <- sum((genre_matrix3[,i]) * (binaryratings2[,c])) #ratings per genre
+  }
+}
+
+#Convert to Binary scale
+for (c in 1:ncol(result)){
+  for (i in 1:nrow(result)){
+    if (result[i,c] < 0){
+      result[i,c] <- 0
+    }
+    else {
+      result[i,c] <- 1
+    }
+  }
+}
+#head(result)
+
+```
+
+
+
+
 
 
 

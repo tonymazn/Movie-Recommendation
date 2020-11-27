@@ -1,0 +1,97 @@
+---
+title: "Generate Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Users   =>80%   20% => Ratings 
+# Movies   100%  100%
+```{r include=FALSE}
+library(recommenderlab)
+library(ggplot2)
+library(data.table)
+library(reshape2)
+
+library(ISLR)
+```
+
+```{r}
+read <- function(fileName, separators) {
+    data <- readLines(con <- file(fileName))
+    close(con)
+    records <- sapply(data, strsplit, split=separators)
+    dataFrame <- data.frame(t(sapply(records,c)))
+    rownames(dataFrame) <- 1: nrow(dataFrame)
+    return(as.data.frame(dataFrame,stringsAsFactors = FALSE))
+}
+
+
+movies = read("data/movies.dat", "::")
+ratings = read("data/ratings.dat", "::")
+users = read("data/users.dat", "::")
+
+colnames(movies) = c('movieId', 'title', 'genres')
+colnames(ratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
+colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
+
+
+head(ratings)
+head(users)
+```
+
+
+```{r pressure, echo=FALSE}
+set.seed(123)
+smp_siz = floor(0.75*nrow(users))
+train_ind = sample(seq_len(nrow(users)),size = smp_siz)
+
+users.train =users[train_ind,]
+users.test=users[-train_ind,]
+
+nrow(users.train)
+nrow(users.test)
+
+
+ids = which(ratings$UserID %in% users.train$UserID)
+length(ids)
+head(ids)
+ratings.train = ratings[ids,]
+ratings.test = ratings[-ids,]
+head(ratings.train)
+head(ratings.test)
+
+
+tmp_file_name <- paste("data/train/", "users.dat", sep="")
+df = data.frame(users.train)
+write.table(df,file=tmp_file_name,col.names=FALSE,row.names=FALSE,sep="::",quote=FALSE)
+
+tmp_file_name <- paste("data/test/", "users.dat", sep="")
+df = data.frame(users.test)
+write.table(df,file=tmp_file_name,col.names=FALSE,row.names=FALSE,sep="::",quote=FALSE)
+
+
+tmp_file_name <- paste("data/train/", "ratings.dat", sep="")
+df = data.frame(ratings.train)
+write.table(df,file=tmp_file_name,col.names=FALSE,row.names=FALSE,sep="::",quote=FALSE)
+
+tmp_file_name <- paste("data/test/", "ratings.dat", sep="")
+df = data.frame(ratings.test)
+write.table(df,file=tmp_file_name,col.names=FALSE,row.names=FALSE,sep="::",quote=FALSE)
+
+
+tmp_file_name <- paste("data/train/", "movies.dat", sep="")
+df = data.frame(movies)
+write.table(df,file=tmp_file_name,col.names=FALSE,row.names=FALSE,sep="::",quote=FALSE)
+
+tmp_file_name <- paste("data/test/", "movies.dat", sep="")
+df = data.frame(movies)
+write.table(df,file=tmp_file_name,col.names=FALSE,row.names=FALSE,sep="::",quote=FALSE)
+
+
+
+```
