@@ -1,0 +1,134 @@
+---
+title: "Project 4: Movie Recommendation - System 1: recommendation based on genres"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## data: https://grouplens.org/datasets/movielens/
+
+```{r include=FALSE}
+format(Sys.Date(), "%c")
+
+library(recommenderlab)
+library(ggplot2)
+library(data.table)
+library(reshape2)
+```
+
+```{r}
+#movies <- read.csv("data/ml-latest-small/movies.csv",stringsAsFactors=FALSE)
+#ratings <- read.csv("data/ml-latest-small/ratings.csv")
+#links <- read.csv("..\data\ml-latest-small\links.csv")
+#tags <- read.csv("..\data\ml-latest-small\tags.csv")
+
+
+```
+
+
+```{r}
+read <- function(fileName, separators) {
+    data <- readLines(con <- file(fileName))
+    close(con)
+    records <- sapply(data, strsplit, split=separators)
+    dataFrame <- data.frame(t(sapply(records,c)))
+    rownames(dataFrame) <- 1: nrow(dataFrame)
+    return(as.data.frame(dataFrame,stringsAsFactors = FALSE))
+}
+
+
+basedir ="data/train/"
+movies = read(paste0(basedir,"movies.dat"), "::")
+ratings = read(paste0(basedir,"ratings.dat"), "::")
+users = read(paste0(basedir, "users.dat"), "::")
+#users = users[, -c(2,4,6,8)] # skip columns
+colnames(movies) = c('MovieID', 'title', 'genres')
+colnames(ratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
+colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
+```
+
+
+```{r}
+
+nrow(movies)
+nrow(ratings)
+nrow(users)
+
+## Data pre-processing
+genres <- as.data.frame(movies[,3], stringsAsFactors=FALSE)
+genres2 <- as.data.frame(tstrsplit(genres[,1], '[|]', type.convert=TRUE), stringsAsFactors=FALSE)
+colnames(genres2)<- c(1:5)  #c(1:10)
+
+genre_list <- c("Action", "Adventure", "Animation", "Children", 
+                "Comedy", "Crime","Documentary", "Drama", "Fantasy",
+                "Film-Noir", "Horror", "Musical", "Mystery","Romance",
+                "Sci-Fi", "Thriller", "War", "Western")
+
+
+
+genre_matrix <- matrix(0,nrow(movies) + 1,18) #empty matrix, 10330=no of movies+1, 18=no of genres
+genre_matrix[1,] <- genre_list #set first row to genre list
+colnames(genre_matrix) <- genre_list #set column names to genre list
+
+#iterate through matrix
+for (i in 1:nrow(genres2)) {
+  for (c in 1:ncol(genres2)) {
+    genmat_col = which(genre_matrix[1,] == genres2[i,c])
+    genre_matrix[i+1,genmat_col] <- 1
+  }
+}
+
+#convert into dataframe
+genre_matrix2 <- as.data.frame(genre_matrix[-1,], stringsAsFactors=FALSE) #remove first row, which was the genre list
+for (c in 1:ncol(genre_matrix2)) {
+  genre_matrix2[,c] <- as.integer(genre_matrix2[,c])
+} 
+
+
+#Create a matrix to search for a movie by genre:
+years <- as.data.frame(movies$title, stringsAsFactors=FALSE)
+head(movies$title,12)
+
+
+library(data.table)
+substrRight <- function(x, n){
+  substr(x, nchar(x)-n+1, nchar(x))
+}
+
+
+
+years <- as.data.frame(substr(substrRight(substrRight(years$`movies$title`, 6),5),1,4))
+#years <- as.data.frame(substr(substrRight(years$`movies$title`, 5),1,4))
+#years
+
+length(movies[,1])
+length(substr(movies[,2],1,nchar(movies[,2])-6))
+length(years)
+length(genre_matrix2)
+
+search_matrix <- cbind(movies[,1], substr(movies[,2],1,nchar(movies[,2])-6), years, genre_matrix2)
+
+colnames(search_matrix) <- c("MovieID", "title", "year", genre_list)
+
+
+write.csv(search_matrix, "search.csv")
+search_matrix <- read.csv("search.csv", stringsAsFactors=FALSE)
+nrow(search_matrix)
+
+# Example of search an Action movie produced in 1995:
+subset(search_matrix, Action == 1 & year == 1995)$title[1:5]
+
+```
+
+
+
+
+
+
+
+```{r}
+format(Sys.Date(), "%c")
+```

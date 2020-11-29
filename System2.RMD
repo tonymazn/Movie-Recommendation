@@ -208,7 +208,7 @@ for (c in 1:ncol(result)){
 
 library(reshape2)
 #Create ratings matrix. Rows = userId, Columns = movieId
-ratingmat <- dcast(ratings, MovieID~UserID, value.var = "Rating", na.rm=FALSE)
+ratingmat <- dcast(ratings, UserID~MovieID, value.var = "Rating", na.rm=FALSE)
 ratingmat <- as.matrix(ratingmat[,-1]) #remove userIds
 
 # Method: UBCF
@@ -248,7 +248,6 @@ vector_ratings <- factor(vector_ratings)
 qplot(vector_ratings) + 
   ggtitle("Distribution of the ratings")
 
-
 # Exploring viewings of movies:
 views_per_movie <- colCounts(ratingmat) # count views for each movie
 
@@ -263,14 +262,12 @@ ggplot(table_views[1:6, ], aes(x = movie, y = views)) +
   scale_x_discrete(labels=subset(movies2, movies2$movieId == table_views$movie)$title) +
   ggtitle("Number of views of the top movies")
 
-
 #Visualizing the matrix:
 image(ratingmat, main = "Heatmap of the rating matrix") # hard to read-too many dimensions
 image(ratingmat[1:10, 1:15], main = "Heatmap of the first rows and columns")
 image(ratingmat[rowCounts(ratingmat) > quantile(rowCounts(ratingmat), 0.99),
                  colCounts(ratingmat) > quantile(colCounts(ratingmat), 0.99)], 
       main = "Heatmap of the top users and movies")
-
 
 
 #Normalize the data
@@ -287,7 +284,6 @@ recommender_model <- Recommender(ratingmat_norm,
 model_details <- getModel(recommender_model)
 model_details$data
 
-
 recom <- predict(recommender_model, 
                  ratingmat[1], 
                  n=10) #Obtain top 10 recommendations for 1st user in dataset
@@ -300,16 +296,19 @@ recom
 
 recom_list <- as(recom, 
                  "list") #convert recommenderlab object to readable list
-as.integer(recom_list[[1]])
 
 #Obtain recommendations
 recom_result <- matrix(0,10)
 for (i in 1:10){
+  
+  
   recom_result[i] <- as.character(subset(movies, 
-                                         movies$movieId == as.integer(recom_list[[1]][i]))$title)
+                                         movies$MovieID == as.integer(recom_list[[1]][i]))$title)
 }
 
 head(recom_result)
+
+
 
 ```
 
