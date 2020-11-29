@@ -40,7 +40,7 @@ read <- function(fileName, separators) {
 }
 
 
-basedir ="data/test/"
+basedir ="data/train/"
 movies = read(paste0(basedir,"movies.dat"), "::")
 ratings = read(paste0(basedir,"ratings.dat"), "::")
 users = read(paste0(basedir, "users.dat"), "::")
@@ -114,15 +114,15 @@ recom_result
 
 ```{r}
 # Evaluation:
-#evaluation_scheme <- evaluationScheme(ratingmat, 
-#                                      method="cross-validation", 
-#                                      k=5, given=3, 
-#                                      goodRating=5) #k=5 meaning a 5-fold cross validation. given=3 meaning a Given-3 protocol
-#evaluation_results <- evaluate(evaluation_scheme, 
-#                               method="UBCF", 
-#                               n=c(1,3,5,10,15,20))
-#eval_results <- getConfusionMatrix(evaluation_results)[[1]]
-
+evaluation_scheme <- evaluationScheme(ratingmat, 
+                                      method="cross-validation", 
+                                      k=5, given=3, 
+                                      goodRating=5) #k=5 meaning a 5-fold cross validation. given=3 meaning a Given-3 protocol
+evaluation_results <- evaluate(evaluation_scheme, 
+                               method="UBCF", 
+                               n=c(1,3,5,10,15,20))
+eval_results <- getConfusionMatrix(evaluation_results)[[1]]
+eval_results
 
 ```
 
