@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## data: https://grouplens.org/datasets/movielens/
 
 ```{r include=FALSE}
-format(Sys.Date(), "%c")
+start_time <- Sys.time()
 
 library(recommenderlab)
 library(ggplot2)
@@ -130,5 +130,5 @@ subset(search_matrix, Action == 1 & year == 1995)$title[1:5]
 
 
 ```{r}
-format(Sys.Date(), "%c")
+Sys.time() - start_time
 ```
