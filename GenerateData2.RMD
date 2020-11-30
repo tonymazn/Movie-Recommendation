@@ -47,7 +47,7 @@ head(users)
 
 ```{r}
 set.seed(123)
-smp_siz = floor(0.99*nrow(movies))
+smp_siz = floor(0.9*nrow(movies))
 train_ind = sample(seq_len(nrow(movies)),size = smp_siz)
 
 movies.train =movies[train_ind,]
