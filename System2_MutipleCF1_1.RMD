@@ -63,7 +63,7 @@ ratings <- as(ratings, 'realRatingMatrix')
 ```
 
 ```{r}
-train_proportion <- .8
+train_proportion <- .5
 nb_of_given_ratings_per_test_user <- 10
 
 #evaluation_scheme <- evaluationScheme(ratings, method='split', train=train_proportion, k=1, given=nb_of_given_ratings_per_test_user)
@@ -73,7 +73,7 @@ e
 ```
 
 
-## 1. User-Based Collaborative Filtering: Cosine Similarity
+## User-Based Collaborative Filtering: Cosine Similarity
 - UBCF_N_C : The raw data is used with no normalization applied;
 
 - UBCF_C_C: Data are normalized using centering.
@@ -111,6 +111,7 @@ error_UCOS <- rbind(
 )
 kable(error_UCOS)
 ```
+
 
 ```{r}
 Sys.time() - start_time

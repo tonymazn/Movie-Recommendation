@@ -1,0 +1,296 @@
+---
+title: "Project 4: System 2 - User-Based Collaborative Filtering"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## reference: https://raw.githubusercontent.com/ChicagoBoothML/MachineLearning_Fall2015/master/Programming%20Scripts/MovieLens%20Movie%20Recommendation/R/MovieLens_MovieRecommendation.Rmd
+## data: https://grouplens.org/datasets/movielens/
+
+```{r include=FALSE}
+start_time <- Sys.time()
+
+library(recommenderlab)
+library(ggplot2)
+library(data.table)
+library(reshape2)
+library(knitr)
+
+```
+
+
+```{r include=FALSE}
+read <- function(fileName, separators) {
+    data <- readLines(con <- file(fileName))
+    close(con)
+    records <- sapply(data, strsplit, split=separators)
+    dataFrame <- data.frame(t(sapply(records,c)))
+    rownames(dataFrame) <- 1: nrow(dataFrame)
+    return(as.data.frame(dataFrame,stringsAsFactors = FALSE))
+}
+
+
+basedir ="data/"
+movies = read(paste0(basedir,"movies.dat"), "::")
+ratings = read(paste0(basedir,"ratings.dat"), "::")
+users = read(paste0(basedir, "users.dat"), "::")
+colnames(movies) = c('MovieID', 'title', 'genres')
+colnames(ratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
+colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
+
+```
+
+
+```{r}
+nrow(movies)
+nrow(ratings)
+nrow(users)
+
+```
+
+```{r}
+#data <- parse_movielens_1m_data()
+#movies <- data$movies
+#users <- data$users
+#ratings <- data$ratings[ , .(user_id, movie_id, rating)]
+#ratings[ , `:=`(user_id = factor(user_id),
+#                movie_id = factor(movie_id))]
+
+ratings <- as(ratings, 'realRatingMatrix')
+```
+
+```{r}
+train_proportion <- .8
+nb_of_given_ratings_per_test_user <- 10
+
+#evaluation_scheme <- evaluationScheme(ratings, method='split', train=train_proportion, k=1, given=nb_of_given_ratings_per_test_user)
+# split the data into the training and the test set:
+e <- evaluationScheme(ratings, method="split", train=train_proportion, given=15, goodRating=0)
+e
+```
+
+
+## User-Based Collaborative Filtering: Cosine Similarity
+- UBCF_N_C : The raw data is used with no normalization applied;
+
+- UBCF_C_C: Data are normalized using centering.
+
+- UBCF_Z_C: Z-score normalization is applied to the data;
+
+```{r}
+#train UBCF cosine similarity models
+
+# non-normalized
+UBCF_N_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = NULL, method="Cosine"))
+
+# centered
+UBCF_C_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "center",method="Cosine"))
+
+# Z-score normalization
+UBCF_Z_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-score",method="Cosine"))
+
+```
+
+## To evaluate the models we again make use of an approach suggested in the CRAN vignette for the recommenderlab package:
+
+
+```{r}
+# compute predicted ratings
+p1 <- predict(UBCF_N_C, getData(e, "known"), type="ratings")
+p2 <- predict(UBCF_C_C, getData(e, "known"), type="ratings")
+p3 <- predict(UBCF_Z_C, getData(e, "known"), type="ratings")
+
+# aggregate the performance statistics
+error_UCOS <- rbind(
+  UBCF_N_C = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  UBCF_C_C = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  UBCF_Z_C = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_UCOS)
+```
+
+
+## User-Based Collaborative Filtering: Euclidean Distance
+```{r}
+#train UBCF Euclidean Distance models
+
+# non-normalized
+UBCF_N_E <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = NULL, method="Euclidean"))
+
+# centered
+UBCF_C_E <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "center",method="Euclidean"))
+
+# Z-score normalization
+UBCF_Z_E <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-score",method="Euclidean"))
+
+```
+
+
+```{r}
+# compute predicted ratings
+p1 <- predict(UBCF_N_E, getData(e, "known"), type="ratings")
+p2 <- predict(UBCF_C_E, getData(e, "known"), type="ratings")
+p3 <- predict(UBCF_Z_E, getData(e, "known"), type="ratings")
+
+# aggregate the performance statistics
+error_UEUC <- rbind(
+  UBCF_N_E = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  UBCF_C_E = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  UBCF_Z_E = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_UEUC)
+```
+
+# User-Based Collaborative Filtering: Pearson Correlation
+```{r}
+#train UBCF pearson correlation models
+
+# non-normalized
+UBCF_N_P <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = NULL, method="pearson"))
+
+# centered
+UBCF_C_P <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "center",method="pearson"))
+
+# Z-score normalization
+UBCF_Z_P <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-score",method="pearson"))
+
+```
+
+
+```{r}
+# compute predicted ratings
+p1 <- predict(UBCF_N_P, getData(e, "known"), type="ratings")
+p2 <- predict(UBCF_C_P, getData(e, "known"), type="ratings")
+p3 <- predict(UBCF_Z_P, getData(e, "known"), type="ratings")
+
+# aggregate the performance statistics
+error_UPC <- rbind(
+  UBCF_N_P = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  UBCF_C_P = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  UBCF_Z_P = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_UPC)
+```
+
+
+# Item-Based Collaborative Filtering: Cosine Similarity
+```{r}
+#train IBCF cosine similarity models
+
+# non-normalized
+IBCF_N_C <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = NULL, method="Cosine"))
+
+# centered
+IBCF_C_C <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "center",method="Cosine"))
+
+# Z-score normalization
+IBCF_Z_C <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "Z-score",method="Cosine"))
+
+```
+
+
+```{r}
+# compute predicted ratings
+p1 <- predict(IBCF_N_C, getData(e, "known"), type="ratings")
+p2 <- predict(IBCF_C_C, getData(e, "known"), type="ratings")
+p3 <- predict(IBCF_Z_C, getData(e, "known"), type="ratings")
+
+
+# aggregate the performance statistics
+error_ICOS <- rbind(
+  IBCF_N_C = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  IBCF_C_C = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  IBCF_Z_C = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+
+kable(error_ICOS)
+
+```
+
+# Item-Based Collaborative Filtering: Euclidean Distance
+```{r}
+#train IBCF Euclidean Distance models
+
+# non-normalized
+IBCF_N_E <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = NULL, method="Euclidean"))
+
+# centered
+IBCF_C_E <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "center",method="Euclidean"))
+
+# Z-score normalization
+IBCF_Z_E <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "Z-score",method="Euclidean"))
+```
+
+```{r}
+# compute predicted ratings
+p1 <- predict(IBCF_N_E, getData(e, "known"), type="ratings")
+p2 <- predict(IBCF_C_E, getData(e, "known"), type="ratings")
+p3 <- predict(IBCF_Z_E, getData(e, "known"), type="ratings")
+
+
+# aggregate the performance statistics
+error_IEUC <- rbind(
+  IBCF_N_E = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  IBCF_C_E = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  IBCF_Z_E = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_IEUC)
+```
+
+
+# Item-Based Collaborative Filtering: Pearson Correlation
+```{r}
+#train IBCF pearson correlation models
+
+# non-normalized
+IBCF_N_P <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = NULL, method="pearson"))
+
+# centered
+IBCF_C_P <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "center",method="pearson"))
+
+# Z-score normalization
+IBCF_Z_P <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "Z-score",method="pearson"))
+
+```
+
+
+```{r}
+# compute predicted ratings
+p1 <- predict(IBCF_N_P, getData(e, "known"), type="ratings")
+p2 <- predict(IBCF_C_P, getData(e, "known"), type="ratings")
+p3 <- predict(IBCF_Z_P, getData(e, "known"), type="ratings")
+
+# aggregate the performance statistics
+error_IPC <- rbind(
+  IBCF_N_P = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  IBCF_C_P = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  IBCF_Z_P = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_IPC)
+
+```
+
+```{r}
+# memory cleanup
+rm(IBCF_N_P, IBCF_C_P, IBCF_Z_P)
+```
+
+```{r}
+c_res <- data.frame(rbind(error_UCOS, error_UEUC, error_UPC, error_ICOS, error_IEUC, error_IPC))
+c_res <- c_res[order(c_res$RMSE ),]
+kable(c_res)
+```
+
+
+```{r}
+# las = 3: rotate x axis labels to perendicular; las = 1: rotate y axis labels
+barplot(c_res$RMSE, col = "yellow", main = "Barplot of Model RMSE's", las = 2, ylab = "RMSE", horiz = FALSE, names.arg = rownames(c_res), cex.names=.8)
+```
+
+```{r}
+Sys.time() - start_time
+```
+
