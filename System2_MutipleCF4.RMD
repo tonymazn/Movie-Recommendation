@@ -73,43 +73,39 @@ e
 ```
 
 
-## 1. User-Based Collaborative Filtering: Cosine Similarity
-- UBCF_N_C : The raw data is used with no normalization applied;
 
-- UBCF_C_C: Data are normalized using centering.
-
-- UBCF_Z_C: Z-score normalization is applied to the data;
-
+# 4.Item-Based Collaborative Filtering: Cosine Similarity
 ```{r}
-#train UBCF cosine similarity models
+#train IBCF cosine similarity models
 
 # non-normalized
-UBCF_N_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = NULL, method="Cosine"))
+IBCF_N_C <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = NULL, method="Cosine"))
 
 # centered
-UBCF_C_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "center",method="Cosine"))
+IBCF_C_C <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "center",method="Cosine"))
 
 # Z-score normalization
-UBCF_Z_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-score",method="Cosine"))
+IBCF_Z_C <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "Z-score",method="Cosine"))
 
 ```
-
-## To evaluate the models we again make use of an approach suggested in the CRAN vignette for the recommenderlab package:
 
 
 ```{r}
 # compute predicted ratings
-p1 <- predict(UBCF_N_C, getData(e, "known"), type="ratings")
-p2 <- predict(UBCF_C_C, getData(e, "known"), type="ratings")
-p3 <- predict(UBCF_Z_C, getData(e, "known"), type="ratings")
+p1 <- predict(IBCF_N_C, getData(e, "known"), type="ratings")
+p2 <- predict(IBCF_C_C, getData(e, "known"), type="ratings")
+p3 <- predict(IBCF_Z_C, getData(e, "known"), type="ratings")
+
 
 # aggregate the performance statistics
-error_UCOS <- rbind(
-  UBCF_N_C = calcPredictionAccuracy(p1, getData(e, "unknown")),
-  UBCF_C_C = calcPredictionAccuracy(p2, getData(e, "unknown")),
-  UBCF_Z_C = calcPredictionAccuracy(p3, getData(e, "unknown"))
+error_ICOS <- rbind(
+  IBCF_N_C = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  IBCF_C_C = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  IBCF_Z_C = calcPredictionAccuracy(p3, getData(e, "unknown"))
 )
-kable(error_UCOS)
+
+kable(error_ICOS)
+
 ```
 
 ```{r}

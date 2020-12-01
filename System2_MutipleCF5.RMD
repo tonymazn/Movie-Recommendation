@@ -73,44 +73,37 @@ e
 ```
 
 
-## 1. User-Based Collaborative Filtering: Cosine Similarity
-- UBCF_N_C : The raw data is used with no normalization applied;
 
-- UBCF_C_C: Data are normalized using centering.
-
-- UBCF_Z_C: Z-score normalization is applied to the data;
-
+# 5.Item-Based Collaborative Filtering: Euclidean Distance
 ```{r}
-#train UBCF cosine similarity models
+#train IBCF Euclidean Distance models
 
 # non-normalized
-UBCF_N_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = NULL, method="Cosine"))
+IBCF_N_E <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = NULL, method="Euclidean"))
 
 # centered
-UBCF_C_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "center",method="Cosine"))
+IBCF_C_E <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "center",method="Euclidean"))
 
 # Z-score normalization
-UBCF_Z_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-score",method="Cosine"))
-
+IBCF_Z_E <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "Z-score",method="Euclidean"))
 ```
-
-## To evaluate the models we again make use of an approach suggested in the CRAN vignette for the recommenderlab package:
-
 
 ```{r}
 # compute predicted ratings
-p1 <- predict(UBCF_N_C, getData(e, "known"), type="ratings")
-p2 <- predict(UBCF_C_C, getData(e, "known"), type="ratings")
-p3 <- predict(UBCF_Z_C, getData(e, "known"), type="ratings")
+p1 <- predict(IBCF_N_E, getData(e, "known"), type="ratings")
+p2 <- predict(IBCF_C_E, getData(e, "known"), type="ratings")
+p3 <- predict(IBCF_Z_E, getData(e, "known"), type="ratings")
+
 
 # aggregate the performance statistics
-error_UCOS <- rbind(
-  UBCF_N_C = calcPredictionAccuracy(p1, getData(e, "unknown")),
-  UBCF_C_C = calcPredictionAccuracy(p2, getData(e, "unknown")),
-  UBCF_Z_C = calcPredictionAccuracy(p3, getData(e, "unknown"))
+error_IEUC <- rbind(
+  IBCF_N_E = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  IBCF_C_E = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  IBCF_Z_E = calcPredictionAccuracy(p3, getData(e, "unknown"))
 )
-kable(error_UCOS)
+kable(error_IEUC)
 ```
+
 
 ```{r}
 Sys.time() - start_time
