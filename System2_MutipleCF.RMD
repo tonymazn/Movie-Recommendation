@@ -273,13 +273,56 @@ kable(error_IPC)
 
 ```
 
+
+# SVD
+```{r}
+recommenderRegistry$get_entry('SVD', dataType='realRatingMatrix')
+```
+
+```{r}
+# Latent-Factor Collaborative Filtering Recommender
+# with matrix factorization by Singular-Value Decomposition (SVD)
+ latent_factor_cofi_rec_SVD <- Recommender(
+   data=ratings_train,
+   method='SVD',            # Item-Based Collaborative Filtering
+   parameter=list(
+     categories=30,         # number of latent factors
+     normalize='center',    # normalizing by subtracting average rating per user;
+                            # note that we don't scale by standard deviations here;
+                            # we are assuming people rate on the same scale but have
+                            # different biases
+     method='Pearson'       # use Pearson correlation
+   ))
+
+
+ model_svd <- Recommender(data = ratings_train, method = "SVD")
+```
+
+
+
+```{r}
+# compute predicted ratings
+p1 <- predict(latent_factor_cofi_rec_SVD, getData(e, "known"), type="ratings")
+p2 <- predict(model_svd, getData(e, "known"), type="ratings")
+
+# aggregate the performance statistics
+error_SVD <- rbind(
+  latent_factor_cofi_rec_SVD = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  SVD_C_P = calcPredictionAccuracy(p2, getData(e, "unknown")),
+)
+kable(error_IPC)
+
+```
+
+
+
 ```{r}
 # memory cleanup
 rm(IBCF_N_P, IBCF_C_P, IBCF_Z_P)
 ```
 
 ```{r}
-c_res <- data.frame(rbind(error_UCOS, error_UEUC, error_UPC, error_ICOS, error_IEUC, error_IPC))
+c_res <- data.frame(rbind(error_UCOS, error_UEUC, error_UPC, error_ICOS, error_IEUC, error_IPC, error_SVD))
 c_res <- c_res[order(c_res$RMSE ),]
 kable(c_res)
 ```
