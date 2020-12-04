@@ -85,12 +85,22 @@ e
 
 # non-normalized
 UBCF_N_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = NULL, method="Cosine"))
+saveRDS(UBCF_N_C, file = "model/UBCF_N_C_model.rds")
+UBCF_N_C1 = readRDS("model/UBCF_N_C_model.rds")
+
 
 # centered
 UBCF_C_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "center",method="Cosine"))
+saveRDS(UBCF_N_C, file = "model/UBCF_C_C_model.rds")
+UBCF_N_C1 = readRDS("model/UBCF_C_C_model.rds")
+
+
 
 # Z-score normalization
 UBCF_Z_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-score",method="Cosine"))
+saveRDS(UBCF_N_C, file = "model/UBCF_Z_C_model.rds")
+UBCF_N_C1 = readRDS("model/UBCF_Z_C_model.rds")
+
 
 ```
 

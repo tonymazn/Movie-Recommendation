@@ -427,50 +427,48 @@ UBCF_N_C1 = readRDS(&quot;model/UBCF_N_C_model.rds&quot;)
 </div>
 <div id="to-predict-with-new-data" class="section level2">
 <h2>To predict with new data</h2>
-<pre class="r"><code>newratings =  read(paste0(basedir,&quot;newratings.dat&quot;), &quot;::&quot;)</code></pre>
+<pre class="r"><code>#newratings =  read(paste0(basedir,&quot;newratings.dat&quot;), &quot;::&quot;)
+#colnames(newratings) = c(&#39;UserID&#39;, &#39;MovieID&#39;, &#39;Rating&#39;, &#39;Timestamp&#39;)
+#head(newratings)
+#numberofnewratings = nrow(newratings)
+#ratings2 = rbind(newratings, ratingsdata)
+#ratings2[1:numberofnewratings,]</code></pre>
+<pre class="r"><code>#newratingsdata &lt;- as(ratings2, &#39;realRatingMatrix&#39;)
+#print(newratingsdata[1:numberofnewratings,])
+
+#pred &lt;- predict(UBCF_N_C1, newdata = newratingsdata[1:numberofnewratings,], n = 10)
+#as(pred, &#39;list&#39;)
+
+#top10 = as(pred, &#39;list&#39;)[[1]]
+#top10withdetail = subset(movies, movies$MovieID %in% top10)
+    #merge(top10, movies)
+#top10withdetail</code></pre>
+<pre class="r"><code>pred = function(userratingfile){
+
+    newratings =  read(paste0(basedir, userratingfile), &quot;::&quot;)
+    colnames(newratings) = c(&#39;UserID&#39;, &#39;MovieID&#39;, &#39;Rating&#39;, &#39;Timestamp&#39;)
+    head(newratings)
+    numberofnewratings = nrow(newratings)
+
+    ratings2 = rbind(newratings, ratingsdata)
+    ratings2[1:numberofnewratings,]
+
+    newratingsdata &lt;- as(ratings2, &#39;realRatingMatrix&#39;)
+    print(newratingsdata[1:numberofnewratings,])
+
+    pred &lt;- predict(UBCF_N_C1, newdata = newratingsdata[1:numberofnewratings,], n = 10)
+    print(as(pred, &#39;list&#39;))
+
+    top10 = as(pred, &#39;list&#39;)[[1]]
+
+    top10withdetail = subset(movies, movies$MovieID %in% top10)
+    print(top10withdetail)
+}</code></pre>
+<pre class="r"><code>pred(&quot;newratings.dat&quot;)</code></pre>
 <pre><code>## Warning in readLines(con &lt;- file(fileName)): incomplete final line found on
 ## &#39;data/newratings.dat&#39;</code></pre>
-<pre class="r"><code>colnames(newratings) = c(&#39;UserID&#39;, &#39;MovieID&#39;, &#39;Rating&#39;, &#39;Timestamp&#39;)
-head(newratings)</code></pre>
-<pre><code>##   UserID MovieID Rating Timestamp
-## 1      0    1193      5 978300760
-## 2      0     661      3 978302109
-## 3      0     914      3 978301968
-## 4      0    3408      4 978300275
-## 5      0    2355      5 978824291
-## 6      0    1197      3 978302268</code></pre>
-<pre class="r"><code>numberofnewratings = nrow(newratings)
-
-
-ratings2 = rbind(newratings, ratingsdata)
-ratings2[1:numberofnewratings,]</code></pre>
-<pre><code>##    UserID MovieID Rating Timestamp
-## 1       0    1193      5 978300760
-## 2       0     661      3 978302109
-## 3       0     914      3 978301968
-## 4       0    3408      4 978300275
-## 5       0    2355      5 978824291
-## 6       0    1197      3 978302268
-## 7       0    1287      5 978302039
-## 8       0    2804      5 978300719
-## 9       0     594      4 978302268
-## 10      0     938      4 978301752
-## 11      0    2398      4 978302281
-## 12      0    2918      4 978302124
-## 13      0    1035      5 978301753
-## 14      0    2791      4 978302188
-## 15      0    2687      3 978824268
-## 16      0    2018      4 978301777
-## 17      0    2797      4 978302039
-## 18      0    2321      3 978302205
-## 19      0     720      3 978300760
-## 20      0    1270      5 978300055</code></pre>
-<pre class="r"><code>newratingsdata &lt;- as(ratings2, &#39;realRatingMatrix&#39;)
-print(newratingsdata[1:numberofnewratings,])</code></pre>
-<pre><code>## 20 x 3706 rating matrix of class &#39;realRatingMatrix&#39; with 3144 ratings.</code></pre>
-<pre class="r"><code>pred &lt;- predict(UBCF_N_C1, newdata = newratingsdata[1:numberofnewratings,], n = 10)
-as(pred, &#39;list&#39;)</code></pre>
-<pre><code>## $`0`
+<pre><code>## 20 x 3706 rating matrix of class &#39;realRatingMatrix&#39; with 3144 ratings.
+## $`0`
 ##  [1] &quot;1011&quot; &quot;1022&quot; &quot;1028&quot; &quot;1029&quot; &quot;1036&quot; &quot;1073&quot; &quot;1084&quot; &quot;1095&quot; &quot;1104&quot; &quot;1148&quot;
 ## 
 ## $`1`
@@ -528,21 +526,9 @@ as(pred, &#39;list&#39;)</code></pre>
 ##  [1] &quot;1&quot;    &quot;1011&quot; &quot;1032&quot; &quot;1088&quot; &quot;1092&quot; &quot;1094&quot; &quot;1099&quot; &quot;1101&quot; &quot;1104&quot; &quot;1185&quot;
 ## 
 ## $`1014`
-##  [1] &quot;1019&quot; &quot;1036&quot; &quot;105&quot;  &quot;1089&quot; &quot;1101&quot; &quot;1104&quot; &quot;1136&quot; &quot;1148&quot; &quot;1185&quot; &quot;1199&quot;</code></pre>
-<pre class="r"><code>#result = as(pred, &#39;list&#39;)
-#result = result[order(pred@items),]
-#result
-
-top10 = as(pred, &#39;list&#39;)[[1]]
-
-top10[1]</code></pre>
-<pre><code>## [1] &quot;1011&quot;</code></pre>
-<pre class="r"><code>top10[2]</code></pre>
-<pre><code>## [1] &quot;1022&quot;</code></pre>
-<pre class="r"><code>top10withdetail = subset(movies, movies$MovieID %in% top10)
-    #merge(top10, movies)
-top10withdetail</code></pre>
-<pre><code>##      MovieID                                        title
+##  [1] &quot;1019&quot; &quot;1036&quot; &quot;105&quot;  &quot;1089&quot; &quot;1101&quot; &quot;1104&quot; &quot;1136&quot; &quot;1148&quot; &quot;1185&quot; &quot;1199&quot;
+## 
+##      MovieID                                        title
 ## 999     1011                    Herbie Rides Again (1974)
 ## 1010    1022                            Cinderella (1950)
 ## 1016    1028                          Mary Poppins (1964)
@@ -564,8 +550,219 @@ top10withdetail</code></pre>
 ## 1080                               Drama
 ## 1089                               Drama
 ## 1133                    Animation|Comedy</code></pre>
+<pre class="r"><code>pred(&quot;newratings1.dat&quot;)</code></pre>
+<pre><code>## Warning in readLines(con &lt;- file(fileName)): incomplete final line found on
+## &#39;data/newratings1.dat&#39;</code></pre>
+<pre><code>## 31 x 3706 rating matrix of class &#39;realRatingMatrix&#39; with 6744 ratings.
+## $`0`
+##  [1] &quot;10&quot;   &quot;1049&quot; &quot;1073&quot; &quot;1085&quot; &quot;1101&quot; &quot;1104&quot; &quot;1204&quot; &quot;1217&quot; &quot;1226&quot; &quot;1231&quot;
+## 
+## $`1`
+##  [1] &quot;1092&quot; &quot;1178&quot; &quot;1179&quot; &quot;1232&quot; &quot;1234&quot; &quot;1237&quot; &quot;1247&quot; &quot;1248&quot; &quot;1251&quot; &quot;1252&quot;
+## 
+## $`10`
+##  [1] &quot;1193&quot; &quot;2908&quot; &quot;3911&quot; &quot;1036&quot; &quot;1046&quot; &quot;1090&quot; &quot;1261&quot; &quot;1327&quot; &quot;1347&quot; &quot;1370&quot;
+## 
+## $`100`
+##  [1] &quot;1064&quot; &quot;1080&quot; &quot;11&quot;   &quot;1117&quot; &quot;1124&quot; &quot;1130&quot; &quot;1136&quot; &quot;1177&quot; &quot;1179&quot; &quot;12&quot;  
+## 
+## $`1000`
+##  [1] &quot;1032&quot; &quot;105&quot;  &quot;1069&quot; &quot;1092&quot; &quot;1101&quot; &quot;1129&quot; &quot;1148&quot; &quot;1153&quot; &quot;1178&quot; &quot;1183&quot;
+## 
+## $`1001`
+##  [1] &quot;1035&quot; &quot;1082&quot; &quot;1148&quot; &quot;1172&quot; &quot;1178&quot; &quot;1207&quot; &quot;1223&quot; &quot;1250&quot; &quot;1253&quot; &quot;1266&quot;
+## 
+## $`1002`
+##  [1] &quot;1019&quot; &quot;1035&quot; &quot;1046&quot; &quot;1060&quot; &quot;1073&quot; &quot;1088&quot; &quot;1092&quot; &quot;1178&quot; &quot;1179&quot; &quot;1219&quot;
+## 
+## $`1003`
+##  [1] &quot;1011&quot; &quot;1019&quot; &quot;1036&quot; &quot;105&quot;  &quot;1066&quot; &quot;1073&quot; &quot;1085&quot; &quot;1101&quot; &quot;1171&quot; &quot;1178&quot;
+## 
+## $`1004`
+##  [1] &quot;1041&quot; &quot;1103&quot; &quot;1124&quot; &quot;1152&quot; &quot;1153&quot; &quot;1189&quot; &quot;1207&quot; &quot;1213&quot; &quot;1219&quot; &quot;1223&quot;
+## 
+## $`1005`
+##  [1] &quot;1&quot;    &quot;1014&quot; &quot;1019&quot; &quot;1041&quot; &quot;1073&quot; &quot;1077&quot; &quot;1084&quot; &quot;1129&quot; &quot;1148&quot; &quot;1171&quot;
+## 
+## $`1006`
+##  [1] &quot;1046&quot; &quot;1081&quot; &quot;1096&quot; &quot;1104&quot; &quot;1128&quot; &quot;1136&quot; &quot;1147&quot; &quot;1148&quot; &quot;1161&quot; &quot;1172&quot;
+## 
+## $`1007`
+##  [1] &quot;1010&quot; &quot;1012&quot; &quot;1032&quot; &quot;1051&quot; &quot;106&quot;  &quot;1084&quot; &quot;1089&quot; &quot;1095&quot; &quot;1101&quot; &quot;1104&quot;
+## 
+## $`1008`
+##  [1] &quot;1014&quot; &quot;1019&quot; &quot;1022&quot; &quot;1028&quot; &quot;1036&quot; &quot;1060&quot; &quot;1088&quot; &quot;1101&quot; &quot;1172&quot; &quot;1199&quot;
+## 
+## $`1009`
+##  [1] &quot;1032&quot; &quot;1078&quot; &quot;11&quot;   &quot;1101&quot; &quot;1136&quot; &quot;1177&quot; &quot;1179&quot; &quot;1186&quot; &quot;1196&quot; &quot;1198&quot;
+## 
+## $`101`
+##  [1] &quot;1080&quot; &quot;1088&quot; &quot;1093&quot; &quot;11&quot;   &quot;110&quot;  &quot;1131&quot; &quot;1132&quot; &quot;1176&quot; &quot;1177&quot; &quot;1178&quot;
+## 
+## $`1010`
+##  [1] &quot;1945&quot; &quot;1104&quot; &quot;1148&quot; &quot;1178&quot; &quot;1188&quot; &quot;1189&quot; &quot;1209&quot; &quot;1235&quot; &quot;1250&quot; &quot;1254&quot;
+## 
+## $`1011`
+##  [1] &quot;1015&quot; &quot;1061&quot; &quot;1080&quot; &quot;1084&quot; &quot;1101&quot; &quot;1125&quot; &quot;1172&quot; &quot;1175&quot; &quot;1223&quot; &quot;1251&quot;
+## 
+## $`1012`
+##  [1] &quot;1047&quot; &quot;1049&quot; &quot;1077&quot; &quot;1078&quot; &quot;1094&quot; &quot;1095&quot; &quot;1104&quot; &quot;1136&quot; &quot;1148&quot; &quot;1221&quot;
+## 
+## $`1013`
+##  [1] &quot;1&quot;    &quot;1011&quot; &quot;1032&quot; &quot;1088&quot; &quot;1092&quot; &quot;1094&quot; &quot;1099&quot; &quot;1101&quot; &quot;1104&quot; &quot;1185&quot;
+## 
+## $`1014`
+##  [1] &quot;1019&quot; &quot;1036&quot; &quot;105&quot;  &quot;1089&quot; &quot;1101&quot; &quot;1104&quot; &quot;1136&quot; &quot;1148&quot; &quot;1185&quot; &quot;1199&quot;
+## 
+## $`1015`
+##  [1] &quot;1022&quot; &quot;1023&quot; &quot;1201&quot; &quot;180&quot;  &quot;3595&quot; &quot;3921&quot; &quot;3922&quot; &quot;594&quot;  &quot;1033&quot; &quot;1148&quot;
+## 
+## $`1016`
+##  [1] &quot;1012&quot; &quot;1036&quot; &quot;1084&quot; &quot;1125&quot; &quot;1136&quot; &quot;1147&quot; &quot;1151&quot; &quot;1189&quot; &quot;1204&quot; &quot;1207&quot;
+## 
+## $`1017`
+##  [1] &quot;3783&quot; &quot;3951&quot; &quot;1032&quot; &quot;1077&quot; &quot;111&quot;  &quot;1172&quot; &quot;1242&quot; &quot;1244&quot; &quot;1292&quot; &quot;1393&quot;
+## 
+## $`1018`
+##  [1] &quot;1069&quot; &quot;1086&quot; &quot;1088&quot; &quot;1089&quot; &quot;1094&quot; &quot;1152&quot; &quot;1153&quot; &quot;1179&quot; &quot;1188&quot; &quot;1212&quot;
+## 
+## $`1019`
+##  [1] &quot;1021&quot; &quot;1046&quot; &quot;13&quot;   &quot;1300&quot; &quot;1334&quot; &quot;146&quot;  &quot;1719&quot; &quot;1885&quot; &quot;1911&quot; &quot;1967&quot;
+## 
+## $`102`
+##  [1] &quot;1015&quot; &quot;1036&quot; &quot;1049&quot; &quot;1073&quot; &quot;1077&quot; &quot;1092&quot; &quot;1101&quot; &quot;1189&quot; &quot;1197&quot; &quot;1201&quot;
+## 
+## $`1020`
+##  [1] &quot;1022&quot; &quot;1032&quot; &quot;1085&quot; &quot;1088&quot; &quot;1172&quot; &quot;1194&quot; &quot;1213&quot; &quot;1224&quot; &quot;1243&quot; &quot;125&quot; 
+## 
+## $`1021`
+##  [1] &quot;10&quot;   &quot;1014&quot; &quot;1019&quot; &quot;1085&quot; &quot;1092&quot; &quot;1094&quot; &quot;112&quot;  &quot;1131&quot; &quot;1132&quot; &quot;1148&quot;
+## 
+## $`1022`
+##  [1] &quot;1069&quot; &quot;1077&quot; &quot;1084&quot; &quot;111&quot;  &quot;1125&quot; &quot;1147&quot; &quot;1148&quot; &quot;1189&quot; &quot;1207&quot; &quot;1208&quot;
+## 
+## $`1023`
+##  [1] &quot;1073&quot; &quot;11&quot;   &quot;1101&quot; &quot;1104&quot; &quot;1136&quot; &quot;1179&quot; &quot;1201&quot; &quot;1212&quot; &quot;1223&quot; &quot;1232&quot;
+## 
+## $`1024`
+##  [1] &quot;1014&quot; &quot;1022&quot; &quot;1028&quot; &quot;1060&quot; &quot;1077&quot; &quot;1078&quot; &quot;1090&quot; &quot;1120&quot; &quot;1172&quot; &quot;1203&quot;
+## 
+##      MovieID                                        title
+## 10        10                             GoldenEye (1995)
+## 1036    1049           Ghost and the Darkness, The (1996)
+## 1059    1073 Willy Wonka and the Chocolate Factory (1971)
+## 1070    1085              Old Man and the Sea, The (1958)
+## 1086    1101                               Top Gun (1986)
+## 1089    1104             Streetcar Named Desire, A (1951)
+## 1187    1204                    Lawrence of Arabia (1962)
+## 1200    1217                                   Ran (1985)
+## 1209    1226                        Quiet Man, The (1952)
+## 1213    1231                      Right Stuff, The (1983)
+##                                   genres
+## 10             Action|Adventure|Thriller
+## 1036                    Action|Adventure
+## 1059 Adventure|Children&#39;s|Comedy|Fantasy
+## 1070                     Adventure|Drama
+## 1086                      Action|Romance
+## 1089                               Drama
+## 1187                       Adventure|War
+## 1200                           Drama|War
+## 1209                      Comedy|Romance
+## 1213                               Drama</code></pre>
+<pre class="r"><code>pred(&quot;newratings2.dat&quot;)</code></pre>
+<pre><code>## Warning in readLines(con &lt;- file(fileName)): incomplete final line found on
+## &#39;data/newratings2.dat&#39;</code></pre>
+<pre><code>## 22 x 3706 rating matrix of class &#39;realRatingMatrix&#39; with 4583 ratings.
+## $`0`
+##  [1] &quot;1073&quot; &quot;1085&quot; &quot;1088&quot; &quot;1095&quot; &quot;1104&quot; &quot;1131&quot; &quot;1136&quot; &quot;1171&quot; &quot;1176&quot; &quot;1179&quot;
+## 
+## $`1`
+##  [1] &quot;1092&quot; &quot;1178&quot; &quot;1179&quot; &quot;1232&quot; &quot;1234&quot; &quot;1237&quot; &quot;1247&quot; &quot;1248&quot; &quot;1251&quot; &quot;1252&quot;
+## 
+## $`10`
+##  [1] &quot;1193&quot; &quot;2908&quot; &quot;3911&quot; &quot;1036&quot; &quot;1046&quot; &quot;1090&quot; &quot;1261&quot; &quot;1327&quot; &quot;1347&quot; &quot;1370&quot;
+## 
+## $`100`
+##  [1] &quot;1064&quot; &quot;1080&quot; &quot;11&quot;   &quot;1117&quot; &quot;1124&quot; &quot;1130&quot; &quot;1136&quot; &quot;1177&quot; &quot;1179&quot; &quot;12&quot;  
+## 
+## $`1000`
+##  [1] &quot;1032&quot; &quot;105&quot;  &quot;1069&quot; &quot;1092&quot; &quot;1101&quot; &quot;1129&quot; &quot;1148&quot; &quot;1153&quot; &quot;1178&quot; &quot;1183&quot;
+## 
+## $`1001`
+##  [1] &quot;1035&quot; &quot;1082&quot; &quot;1148&quot; &quot;1172&quot; &quot;1178&quot; &quot;1207&quot; &quot;1223&quot; &quot;1250&quot; &quot;1253&quot; &quot;1266&quot;
+## 
+## $`1002`
+##  [1] &quot;1019&quot; &quot;1035&quot; &quot;1046&quot; &quot;1060&quot; &quot;1073&quot; &quot;1088&quot; &quot;1092&quot; &quot;1178&quot; &quot;1179&quot; &quot;1219&quot;
+## 
+## $`1003`
+##  [1] &quot;1011&quot; &quot;1019&quot; &quot;1036&quot; &quot;105&quot;  &quot;1066&quot; &quot;1073&quot; &quot;1085&quot; &quot;1101&quot; &quot;1171&quot; &quot;1178&quot;
+## 
+## $`1004`
+##  [1] &quot;1041&quot; &quot;1103&quot; &quot;1124&quot; &quot;1152&quot; &quot;1153&quot; &quot;1189&quot; &quot;1207&quot; &quot;1213&quot; &quot;1219&quot; &quot;1223&quot;
+## 
+## $`1005`
+##  [1] &quot;1&quot;    &quot;1014&quot; &quot;1019&quot; &quot;1041&quot; &quot;1073&quot; &quot;1077&quot; &quot;1084&quot; &quot;1129&quot; &quot;1148&quot; &quot;1171&quot;
+## 
+## $`1006`
+##  [1] &quot;1046&quot; &quot;1081&quot; &quot;1096&quot; &quot;1104&quot; &quot;1128&quot; &quot;1136&quot; &quot;1147&quot; &quot;1148&quot; &quot;1161&quot; &quot;1172&quot;
+## 
+## $`1007`
+##  [1] &quot;1010&quot; &quot;1012&quot; &quot;1032&quot; &quot;1051&quot; &quot;106&quot;  &quot;1084&quot; &quot;1089&quot; &quot;1095&quot; &quot;1101&quot; &quot;1104&quot;
+## 
+## $`1008`
+##  [1] &quot;1014&quot; &quot;1019&quot; &quot;1022&quot; &quot;1028&quot; &quot;1036&quot; &quot;1060&quot; &quot;1088&quot; &quot;1101&quot; &quot;1172&quot; &quot;1199&quot;
+## 
+## $`1009`
+##  [1] &quot;1032&quot; &quot;1078&quot; &quot;11&quot;   &quot;1101&quot; &quot;1136&quot; &quot;1177&quot; &quot;1179&quot; &quot;1186&quot; &quot;1196&quot; &quot;1198&quot;
+## 
+## $`101`
+##  [1] &quot;1080&quot; &quot;1088&quot; &quot;1093&quot; &quot;11&quot;   &quot;110&quot;  &quot;1131&quot; &quot;1132&quot; &quot;1176&quot; &quot;1177&quot; &quot;1178&quot;
+## 
+## $`1010`
+##  [1] &quot;1945&quot; &quot;1104&quot; &quot;1148&quot; &quot;1178&quot; &quot;1188&quot; &quot;1189&quot; &quot;1209&quot; &quot;1235&quot; &quot;1250&quot; &quot;1254&quot;
+## 
+## $`1011`
+##  [1] &quot;1015&quot; &quot;1061&quot; &quot;1080&quot; &quot;1084&quot; &quot;1101&quot; &quot;1125&quot; &quot;1172&quot; &quot;1175&quot; &quot;1223&quot; &quot;1251&quot;
+## 
+## $`1012`
+##  [1] &quot;1047&quot; &quot;1049&quot; &quot;1077&quot; &quot;1078&quot; &quot;1094&quot; &quot;1095&quot; &quot;1104&quot; &quot;1136&quot; &quot;1148&quot; &quot;1221&quot;
+## 
+## $`1013`
+##  [1] &quot;1&quot;    &quot;1011&quot; &quot;1032&quot; &quot;1088&quot; &quot;1092&quot; &quot;1094&quot; &quot;1099&quot; &quot;1101&quot; &quot;1104&quot; &quot;1185&quot;
+## 
+## $`1014`
+##  [1] &quot;1019&quot; &quot;1036&quot; &quot;105&quot;  &quot;1089&quot; &quot;1101&quot; &quot;1104&quot; &quot;1136&quot; &quot;1148&quot; &quot;1185&quot; &quot;1199&quot;
+## 
+## $`1015`
+##  [1] &quot;1022&quot; &quot;1023&quot; &quot;1201&quot; &quot;180&quot;  &quot;3595&quot; &quot;3921&quot; &quot;3922&quot; &quot;594&quot;  &quot;1033&quot; &quot;1148&quot;
+## 
+## $`1016`
+##  [1] &quot;1012&quot; &quot;1036&quot; &quot;1084&quot; &quot;1125&quot; &quot;1136&quot; &quot;1147&quot; &quot;1151&quot; &quot;1189&quot; &quot;1204&quot; &quot;1207&quot;
+## 
+##      MovieID                                                             title
+## 1059    1073                      Willy Wonka and the Chocolate Factory (1971)
+## 1070    1085                                   Old Man and the Sea, The (1958)
+## 1073    1088                                              Dirty Dancing (1987)
+## 1080    1095                                        Glengarry Glen Ross (1992)
+## 1089    1104                                  Streetcar Named Desire, A (1951)
+## 1116    1131                                           Jean de Florette (1986)
+## 1121    1136                            Monty Python and the Holy Grail (1974)
+## 1156    1171                                                Bob Roberts (1992)
+## 1161    1176 Double Life of Veronique, The (La Double Vie de Véronique) (1991)
+## 1164    1179                                              Grifters, The (1990)
+##                                   genres
+## 1059 Adventure|Children&#39;s|Comedy|Fantasy
+## 1070                     Adventure|Drama
+## 1073                     Musical|Romance
+## 1080                               Drama
+## 1089                               Drama
+## 1116                               Drama
+## 1121                              Comedy
+## 1156                              Comedy
+## 1161                               Drama
+## 1164               Crime|Drama|Film-Noir</code></pre>
 <pre class="r"><code>Sys.time() - start_time</code></pre>
-<pre><code>## Time difference of 47.00065 secs</code></pre>
+<pre><code>## Time difference of 51.75591 secs</code></pre>
 </div>
 
 

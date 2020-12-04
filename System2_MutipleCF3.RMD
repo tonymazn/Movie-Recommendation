@@ -65,7 +65,7 @@ ratings <- as(ratings, 'realRatingMatrix')
 ```{r}
 #train_proportion <- .5 error
 
-train_proportion <- .8
+train_proportion <- .9
 nb_of_given_ratings_per_test_user <- 10
 
 #evaluation_scheme <- evaluationScheme(ratings, method='split', train=train_proportion, k=1, given=nb_of_given_ratings_per_test_user)
@@ -81,12 +81,21 @@ e
 
 # non-normalized
 UBCF_N_P <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = NULL, method="pearson"))
+saveRDS(UBCF_N_P, file = "model/UBCF_N_P_model.rds")
+UBCF_N_C1 = readRDS("model/UBCF_N_P_model.rds")
+
 
 # centered
 UBCF_C_P <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "center",method="pearson"))
+saveRDS(UBCF_C_P, file = "model/UBCF_C_P_model.rds")
+UBCF_N_C1 = readRDS("model/UBCF_C_P_model.rds")
+
 
 # Z-score normalization
 UBCF_Z_P <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-score",method="pearson"))
+saveRDS(UBCF_Z_P, file = "model/UBCF_Z_P_model.rds")
+UBCF_N_C1 = readRDS("model/UBCF_Z_P_model.rds")
+
 
 ```
 

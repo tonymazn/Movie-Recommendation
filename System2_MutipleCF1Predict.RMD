@@ -106,44 +106,62 @@ UBCF_N_C1 = readRDS("model/UBCF_N_C_model.rds")
 
 ## To predict with new data
 ```{r}
-newratings =  read(paste0(basedir,"newratings.dat"), "::")
-colnames(newratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
-head(newratings)
-numberofnewratings = nrow(newratings)
-
-
-ratings2 = rbind(newratings, ratingsdata)
-ratings2[1:numberofnewratings,]
+#newratings =  read(paste0(basedir,"newratings.dat"), "::")
+#colnames(newratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
+#head(newratings)
+#numberofnewratings = nrow(newratings)
+#ratings2 = rbind(newratings, ratingsdata)
+#ratings2[1:numberofnewratings,]
 ```
 
 
 ```{r}
+#newratingsdata <- as(ratings2, 'realRatingMatrix')
+#print(newratingsdata[1:numberofnewratings,])
 
-newratingsdata <- as(ratings2, 'realRatingMatrix')
-print(newratingsdata[1:numberofnewratings,])
+#pred <- predict(UBCF_N_C1, newdata = newratingsdata[1:numberofnewratings,], n = 10)
+#as(pred, 'list')
 
-
-
-
-pred <- predict(UBCF_N_C1, newdata = newratingsdata[1:numberofnewratings,], n = 10)
-as(pred, 'list')
-
-
-#result = as(pred, 'list')
-#result = result[order(pred@items),]
-#result
-
-top10 = as(pred, 'list')[[1]]
-
-top10[1]
-top10[2]
-
-top10withdetail = subset(movies, movies$MovieID %in% top10)
+#top10 = as(pred, 'list')[[1]]
+#top10withdetail = subset(movies, movies$MovieID %in% top10)
     #merge(top10, movies)
-top10withdetail
+#top10withdetail
 
 ```
 
+
+
+```{r}
+pred = function(userratingfile){
+
+    newratings =  read(paste0(basedir, userratingfile), "::")
+    colnames(newratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
+    head(newratings)
+    numberofnewratings = nrow(newratings)
+
+    ratings2 = rbind(newratings, ratingsdata)
+    ratings2[1:numberofnewratings,]
+
+    newratingsdata <- as(ratings2, 'realRatingMatrix')
+    print(newratingsdata[1:numberofnewratings,])
+
+    pred <- predict(UBCF_N_C1, newdata = newratingsdata[1:numberofnewratings,], n = 10)
+    print(as(pred, 'list'))
+
+
+    top10 = as(pred, 'list')[[1]]
+
+    top10withdetail = subset(movies, movies$MovieID %in% top10)
+    print(top10withdetail)
+}
+```
+
+```{r}
+pred("newratings.dat")
+pred("newratings1.dat")
+pred("newratings2.dat")
+
+```
 
 
 

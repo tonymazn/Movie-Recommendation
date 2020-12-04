@@ -125,10 +125,15 @@ recommenderRegistry$get_entry('SVD', dataType='realRatingMatrix')
                             # different biases
      method='Pearson'       # use Pearson correlation
    ))
+saveRDS(UBCF_N_C, file = "model/latent_factor_cofi_rec_SVD_model.rds")
+UBCF_N_C1 = readRDS("model/latent_factor_cofi_rec_SVD_model.rds")
 
 latent_factor_cofi_rec_SVD
 
 model_svd <- Recommender(data = ratings_train, method = "SVD")
+saveRDS(UBCF_N_C, file = "model/model_svd_model.rds")
+UBCF_N_C1 = readRDS("model/model_svd_model.rds")
+
 
 model_svd
 

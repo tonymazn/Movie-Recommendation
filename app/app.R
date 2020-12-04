@@ -6,8 +6,11 @@ library(data.table)
 library(ShinyRatingInput)
 library(shinyjs)
 
+
+
+#modelpath = "model/latent_factor_cofi_rec_SVD_model.rds"
 #modelpath = "model/UBCF_N_C_model.rds"
-modelpath = "model/latent_factor_cofi_rec_SVD_model.rds"
+modelpath = "model/svd_model.rds"
 databasepath ="data/"
 moviesListFileName = "aggr.dat"
 numberofmovierecommend = 24
@@ -17,15 +20,15 @@ set.seed(4486)
 source('functions/helpers.R')
 
 # load functions
-source('functions/cf_algorithm.R') # collaborative filtering
-source('functions/similarity_measures.R') # similarity measures
+#source('functions/cf_algorithm.R') # collaborative filtering
+#source('functions/similarity_measures.R') # similarity measures
 
 # define functions
 get_user_ratings <- function(value_list) {
   dat <- data.table(UserID= 0,
                     MovieID = sapply(strsplit(names(value_list), "_"), function(x) ifelse(length(x) > 1, x[[2]], NA)),
                     Rating = unlist(as.character(value_list)),
-                    Timestamp = as.numeric(Sys.time())
+                    Timestamp = as.integer(Sys.time())
                     )
   dat <- dat[!is.null(Rating) & !is.na(MovieID)]
   dat[Rating == " ", Rating := 0]
@@ -33,12 +36,13 @@ get_user_ratings <- function(value_list) {
   dat <- dat[Rating > 0]
   numberofnewratings = nrow(dat)
   #saveRDS(dat, "app.log")
+
+  write.table(dat, file=  paste0("log/userratings", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
   
   ratings2 = rbind(dat, ratingsdata)
   newratingsdata <- as(ratings2, 'realRatingMatrix')
 
-  #write.table(newratingsdata[1:numberofnewratings,],file="userratings.log",col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
-  
+
   newratingsdata[1:numberofnewratings,]
 
   
@@ -72,13 +76,32 @@ genre_list <- c("Action", "Adventure", "Animation", "Children",
                 "Sci.Fi", "Thriller", "War", "Western")
 
 
-model = Recommender(ratings, "UBCF", param=list(normalize = NULL, method="Cosine"))
-  #readRDS(modelpath)
+#model = Recommender(
+#            data=ratings,
+#            method='SVD',            # Item-Based Collaborative Filtering
+#            parameter=list(
+#                  categories=30,         # number of latent factors
+#                  normalize='center',    # normalizing by subtracting average rating per user;
+#                                         # note that we don't scale by standard deviations here;
+#                                         # we are assuming people rate on the same scale but have
+#                                         # different biases
+#                  method='Pearson'       # use Pearson correlation
+#            ))
+ 
+#Recommender(ratings, "UBCF", param=list(normalize = NULL, method="Cosine"))
+
+model = readRDS(modelpath)
+#readRDS(modelpath)
+
+load_data <- function() {
+  Sys.sleep(2)
+  hide("loading_page")
+  show("main_content")
+}
 
 
 
 ui <- dashboardPage(
-  
 
   dashboardHeader(title="Movie Recommend"),
   dashboardSidebar(
@@ -87,16 +110,25 @@ ui <- dashboardPage(
     ),
     
     sidebarMenu(
-      menuItem("First", tabName="first", icon=icon("calendar")),
-      menuItem("Second", tabName = "second", icon=icon("th"))
+      menuItem("System I (Genres)", tabName="first", icon=icon("calendar")),
+      menuItem("System II (CF)", tabName = "second", icon=icon("th"))
     )
   ),
   
   dashboardBody(
+        useShinyjs(),
+        div(
+        id = "loading_page",
+           h1("Loading...")
+        ),
+        hidden(
+           div(id = "main_content")
+        ),
+
                 tabItems(
                        tabItem(tabName = "first",
                                fluidRow(
-                                 box(width = 12,title = "Step 1: Rate as many books as possible", status = "info", solidHeader = TRUE, collapsible = TRUE,
+                                 box(width = 12,title = "Step 1: Rate as many movies as possible", status = "info", solidHeader = TRUE, collapsible = TRUE,
                                      div(class = "genres",
                                          selectInput("input_genre", "Genre #1",genre_list),
                                          selectInput("input_genre2", "Genre #2",genre_list),
@@ -108,7 +140,7 @@ ui <- dashboardPage(
                                  useShinyjs(),
                                  box(
                                    width = 12, status = "info", solidHeader = TRUE,
-                                   title = "Step 2: Discover books you might like",
+                                   title = "Step 2: Discover movies you might like",
                                    br(),
                                    withBusyIndicatorUI(
                                      actionButton("btn_genre", "Click here to get your recommendations", class = "btn-warning")
@@ -131,7 +163,7 @@ ui <- dashboardPage(
                                useShinyjs(),
                                box(
                                  width = 12, status = "info", solidHeader = TRUE,
-                                 title = "Step 2: Discover books you might like",
+                                 title = "Step 2: Discover movies you might like",
                                  br(),
                                  withBusyIndicatorUI(
                                    actionButton("btn", "Click here to get your recommendations", class = "btn-warning")
@@ -151,19 +183,20 @@ ui <- dashboardPage(
 
 
 server <- function(input, output){
-
+    load_data()
+  
 #    observeEvent(input$ratings, {
       
 #    })
 
-    # show the books to be rated
+    # show the movies to be rated
     output$ratings <- renderUI({
      
       # Reflesh sample      
       moviesList <- moviesList[sample(nrow(moviesList), 200),]
 
       num_rows <- 20
-      num_movies <- 6 # books per row
+      num_movies <- 6 # movies per row
       
       lapply(1:num_rows, function(i) {
         list(fluidRow(lapply(1:num_movies, function(j) {
@@ -187,10 +220,13 @@ server <- function(input, output){
         value_list <- reactiveValuesToList(input)
         user_ratings <- get_user_ratings(value_list) 
         pred <- predict(model, newdata = user_ratings, n = numberofmovierecommend)
+
         recom_resultID = as(pred, 'list')[[1]]
         recom_results <- subset(movies, movies$MovieID %in% recom_resultID)
         
-        write.table(recom_results,file="app.log",col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+        write.table(recom_resultID, file=  paste0("log/recom_resultID", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+        write.table(recom_results, file=  paste0("log/app", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+        
         recom_results
 
       }) # still busy
