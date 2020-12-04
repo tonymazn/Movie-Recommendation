@@ -456,37 +456,12 @@ recom_result</code></pre>
 ##  [9,] &quot;Requiem for a Dream (2000)&quot;                                 
 ## [10,] &quot;Billy Madison (1995)&quot;</code></pre>
 <pre class="r"><code># Evaluation:
-evaluation_scheme &lt;- evaluationScheme(ratingmat, 
-                                      method=&quot;cross-validation&quot;, 
-                                      k=5, given=3, 
-                                      goodRating=5) #k=5 meaning a 5-fold cross validation. given=3 meaning a Given-3 protocol
-evaluation_results &lt;- evaluate(evaluation_scheme, 
-                               method=&quot;UBCF&quot;, 
-                               n=c(1,3,5,10,15,20))</code></pre>
-<pre><code>## UBCF run fold/sample [model time/prediction time]
-##   1  [0.05sec/136.27sec] 
-##   2  [0.05sec/136.86sec] 
-##   3  [0.06sec/139.74sec] 
-##   4  [0.07sec/141.57sec] 
-##   5  [0.07sec/140.77sec]</code></pre>
-<pre class="r"><code>eval_results &lt;- getConfusionMatrix(evaluation_results)[[1]]
-eval_results</code></pre>
-<pre><code>##            TP         FP       FN       TN  precision       recall          TPR
-## 1  0.01655629  0.9817881 29.69702 2923.305 0.01658375 0.0003675027 0.0003675027
-## 3  0.04718543  2.9478477 29.66639 2921.339 0.01575456 0.0014829790 0.0014829790
-## 5  0.07036424  4.9213576 29.64321 2919.365 0.01409619 0.0021484597 0.0021484597
-## 10 0.14735099  9.8360927 29.56623 2914.450 0.01475954 0.0045318115 0.0045318115
-## 15 0.23261589 14.7425497 29.48096 2909.544 0.01553344 0.0079234782 0.0079234782
-## 20 0.29635762 19.6705298 29.41722 2904.616 0.01484245 0.0104143234 0.0104143234
-##             FPR
-## 1  0.0003356749
-## 3  0.0010079286
-## 5  0.0016827701
-## 10 0.0033632479
-## 15 0.0050408820
-## 20 0.0067260162</code></pre>
+#evaluation_scheme &lt;- evaluationScheme(ratingmat,method=&quot;cross-validation&quot;,k=5, given=3, goodRating=5) #k=5 meaning a 5-fold cross validation. given=3 meaning a Given-3 protocol
+#evaluation_results &lt;- evaluate(evaluation_scheme, method=&quot;UBCF&quot;, n=c(1,3,5,10,15,20))
+#eval_results &lt;- getConfusionMatrix(evaluation_results)[[1]]
+#eval_results</code></pre>
 <pre class="r"><code>Sys.time() - start_time</code></pre>
-<pre><code>## Time difference of 12.24255 mins</code></pre>
+<pre><code>## Time difference of 21.44839 secs</code></pre>
 </div>
 
 

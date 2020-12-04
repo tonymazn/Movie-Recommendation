@@ -20,7 +20,7 @@ library(reshape2)
 ```
 
 ```{r}
-#movies <- read.csv("data/ml-latest-small/movies.csv",stringsAsFactors=FALSE)
+#movies <- read.cthsv("data/ml-latest-small/movies.csv",stringsAsFactors=FALSE)
 #ratings <- read.csv("data/ml-latest-small/ratings.csv")
 #links <- read.csv("..\data\ml-latest-small\links.csv")
 #tags <- read.csv("..\data\ml-latest-small\tags.csv")

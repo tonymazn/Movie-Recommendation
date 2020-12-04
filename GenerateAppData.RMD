@@ -1,0 +1,72 @@
+---
+title: "Generate App Data to diaplay"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Movies   =>80%   20% => Ratings 
+# Users     100%  100%
+```{r include=FALSE}
+library(recommenderlab)
+library(ggplot2)
+library(data.table)
+library(reshape2)
+
+library(ISLR)
+```
+
+```{r}
+read <- function(fileName, separators) {
+    data <- readLines(con <- file(fileName))
+    close(con)
+    records <- sapply(data, strsplit, split=separators)
+    dataFrame <- data.frame(t(sapply(records,c)))
+    rownames(dataFrame) <- 1: nrow(dataFrame)
+    return(as.data.frame(dataFrame,stringsAsFactors = FALSE))
+}
+
+
+movies = read("data/movies.dat", "::")
+ratings = read("data/ratings.dat", "::")
+users = read("data/users.dat", "::")
+
+colnames(movies) = c('MovieID', 'Title', 'Genres')
+colnames(ratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
+colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
+
+head(movies)
+head(ratings)
+head(users)
+```
+
+
+```{r}
+aggr = aggregate(as.numeric( ratings[,"Rating"]), list(ratings$MovieID), mean)
+colnames(aggr) = c('MovieID', 'AveRating')
+aggr[,2] = round(aggr[,2])
+
+aggr = merge(aggr, movies)
+
+aggr = aggr[order(as.numeric(aggr$MovieID) ),]
+
+head(aggr)
+
+
+tmp_file_name <- paste("data/train/", "aggr.dat", sep="")
+df = data.frame(aggr)
+nrow(df)
+write.table(df,file=tmp_file_name,col.names=FALSE,row.names=FALSE,sep="::",quote=FALSE)
+
+
+
+tmp_file_name <- paste("data/train/", "aggr200.dat", sep="")
+df = data.frame(aggr[1:200,])
+nrow(df)
+write.table(df,file=tmp_file_name,col.names=FALSE,row.names=FALSE,sep="::",quote=FALSE)
+
+```
