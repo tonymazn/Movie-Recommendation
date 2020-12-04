@@ -1,4 +1,17 @@
 ## ui.R
+library(shiny)
+library(shinydashboard)
+library(recommenderlab)
+library(data.table)
+library(ShinyRatingInput)
+library(shinyjs)
+
+#modelpath = "model/UBCF_N_C_model.rds"
+modelpath = "model/latent_factor_cofi_rec_SVD_model.rds"
+databasepath ="data/"
+moviesListFileName = "aggr.dat"
+numberofmovierecommend = 24
+
 source('functions/helpers.R')
 
 # load functions
@@ -7,37 +20,55 @@ source('functions/similarity_measures.R') # similarity measures
 
 # define functions
 get_user_ratings <- function(value_list) {
-  dat <- data.table(book_id = sapply(strsplit(names(value_list), "_"), function(x) ifelse(length(x) > 1, x[[2]], NA)),
-                    rating = unlist(as.character(value_list)))
-  dat <- dat[!is.null(rating) & !is.na(book_id)]
-  dat[rating == " ", rating := 0]
-  dat[, ':=' (book_id = as.numeric(book_id), rating = as.numeric(rating))]
-  dat <- dat[rating > 0]
+  dat <- data.table(UserID=99999,
+                    MovieID = sapply(strsplit(names(value_list), "_"), function(x) ifelse(length(x) > 1, x[[2]], NA)),
+                    Rating = unlist(as.character(value_list)),
+                    Timestamp = as.numeric(Sys.time())
+                    )
+  dat <- dat[!is.null(Rating) & !is.na(MovieID)]
+  dat[Rating == " ", Rating := 0]
+  dat[, ':=' (MovieID = as.numeric(MovieID), Rating = as.numeric(Rating))]
+  dat <- dat[Rating > 0]
+  numberofnewratings = nrow(dat)
+  #saveRDS(dat, "app.log")
   
-  # get the indices of the ratings
-  # add the user ratings to the existing rating matrix
-  user_ratings <- sparseMatrix(i = dat$book_id, 
-                               j = rep(1,nrow(dat)), 
-                               x = dat$rating, 
-                               dims = c(nrow(ratingmat), 1))
+  ratings2 = rbind(dat, ratingsdata)
+  newratingsdata <- as(ratings2, 'realRatingMatrix')
+  
+  newratingsdata[1:numberofnewratings,]
 }
 
 # read in data
-#books <- fread('data/books.csv')
-#ratings <- fread('data/ratings_cleaned.csv')
-
-basedir ="data/"
-movies <- read(paste0(basedir,"aggr200.dat"), "::")
-colnames(movies) = c( 'MovieID', 'AveRating', 'title', 'genres')
-movies$MovieID <- as.numeric(movies$MovieID)
 
 
+moviesList <- read(paste0(databasepath,moviesListFileName), "::")
+moviesList <- moviesList[sample(nrow(moviesList), 200),]
+
+
+movies = read(paste0(databasepath,"movies.dat"), "::")
+ratingsdata = read(paste0(databasepath,"ratings.dat"), "::")
+users = read(paste0(databasepath, "users.dat"), "::")
+
+colnames(moviesList) = c( 'MovieID', 'AveRating', 'title', 'genres')
+
+colnames(movies) = c('MovieID', 'title', 'genres')
+colnames(ratingsdata) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
+colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
+
+moviesList$MovieID <- as.numeric(moviesList$MovieID)
+
+ratings <- as(ratingsdata, 'realRatingMatrix')  
 
 
 genre_list <- c("Action", "Adventure", "Animation", "Children", 
                 "Comedy", "Crime","Documentary", "Drama", "Fantasy",
                 "Film.Noir", "Horror", "Musical", "Mystery","Romance",
                 "Sci.Fi", "Thriller", "War", "Western")
+
+
+model = Recommender(ratings, "UBCF", param=list(normalize = NULL, method="Cosine"))
+  #readRDS(modelpath)
+
 
 
 ui <- dashboardPage(
@@ -74,10 +105,10 @@ ui <- dashboardPage(
                                    title = "Step 2: Discover books you might like",
                                    br(),
                                    withBusyIndicatorUI(
-                                     actionButton("btn1", "Click here to get your recommendations", class = "btn-warning")
+                                     actionButton("btn_genre", "Click here to get your recommendations", class = "btn-warning")
                                    ),
                                    br(),
-                                   tableOutput("results1")
+                                   tableOutput("results_genre")
                                  )
                                )
                        ),
@@ -128,9 +159,9 @@ server <- function(input, output){
       lapply(1:num_rows, function(i) {
         list(fluidRow(lapply(1:num_movies, function(j) {
           list(box(width = 2,
-                   div(style = "text-align:center", img(src = paste0( "movieImages/", movies$MovieID[(i - 1) * num_movies + j], ".jpg"), height="60%", width="60%")),
-                   div(style = "text-align:center", paste0( movies$title[(i - 1) * num_movies + j]) ),
-                   div(style = "text-align:center; font-size: 150%; color: #f0ad4e;", ratingInput(paste0("select_", movies$MovieID[(i - 1) * num_movies + j]), label = "", dataStop = 5))))
+                   div(style = "text-align:center", img(src = paste0( "movieImages/", moviesList$MovieID[(i - 1) * num_movies + j], ".jpg"), height="60%", width="60%")),
+                   div(style = "text-align:center", paste0( moviesList$title[(i - 1) * num_movies + j]) ),
+                   div(style = "text-align:center; font-size: 150%; color: #f0ad4e;", ratingInput(paste0("select_", moviesList$MovieID[(i - 1) * num_movies + j]), label = "", dataStop = 5))))
         })))
       })
     })
@@ -145,28 +176,14 @@ server <- function(input, output){
         
         # get the user's rating data
         value_list <- reactiveValuesToList(input)
-        user_ratings <- get_user_ratings(value_list)
+        user_ratings <- get_user_ratings(value_list) 
+        pred <- predict(model, newdata = user_ratings, n = numberofmovierecommend)
+        recom_resultID = as(pred, 'list')[[1]]
+        recom_results <- subset(movies, movies$MovieID %in% recom_resultID)
         
-        # add user's ratings as first column to rating matrix
-        rmat <- cbind(user_ratings, ratingmat)
-        
-        # get the indices of which cells in the matrix should be predicted
-        # predict all books the current user has not yet rated
-        items_to_predict <- which(rmat[, 1] == 0)
-        prediction_indices <- as.matrix(expand.grid(items_to_predict, 1))
-        
-        # run the ubcf-alogrithm
-        res <- predict_cf(rmat, prediction_indices, "ubcf", TRUE, cal_cos, 1000, FALSE, 2000, 1000)
-        
-        # sort, organize, and return the results
-        user_results <- sort(res[, 1], decreasing = TRUE)[1:20]
-        user_predicted_ids <- as.numeric(names(user_results))
-        recom_results <- data.table(Rank = 1:20, 
-                                    Book_id = user_predicted_ids, 
-                                    Author = books$authors[user_predicted_ids], 
-                                    Title = books$title[user_predicted_ids], 
-                                    Predicted_rating =  user_results)
-        
+        write.table(recom_results,file="app.log",col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+        recom_results
+
       }) # still busy
       
     }) # clicked on button
@@ -175,23 +192,19 @@ server <- function(input, output){
     # display the recommendations
     output$results <- renderUI({
       num_rows <- 4
-      num_movies <- 5
+      num_movies <- 6
       recom_result <- df()
       
       lapply(1:num_rows, function(i) {
         list(fluidRow(lapply(1:num_movies, function(j) {
           box(width = 2, status = "success", solidHeader = TRUE, title = paste0("Rank ", (i - 1) * num_movies + j),
               
-              div(style = "text-align:center", 
-                  a(href = paste0('https://www.goodreads.com/book/show/', books$best_book_id[recom_result$Book_id[(i - 1) * num_movies + j]]), 
-                    target='blank', 
-                    img(src = books$image_url[recom_result$Book_id[(i - 1) * num_movies + j]], height = 150))
-              ),
+              div(style = "text-align:center", img(src = paste0( "movieImages/", recom_result$MovieID[(i - 1) * num_movies + j], ".jpg"), height="60%", width="60%")),
               div(style = "text-align:center; color: #999999; font-size: 80%", 
-                  books$authors[recom_result$Book_id[(i - 1) * num_movies + j]]
+                  paste0( recom_result$title[(i - 1) * num_movies + j])
               ),
               div(style="text-align:center; font-size: 100%", 
-                  strong(books$title[recom_result$Book_id[(i - 1) * num_movies + j]])
+                  strong(paste0( recom_result$title[(i - 1) * num_movies + j]))
               )
               
           )        

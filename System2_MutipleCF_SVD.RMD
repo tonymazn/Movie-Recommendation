@@ -109,7 +109,7 @@ recommenderRegistry$get_entry('SVD', dataType='realRatingMatrix')
 ```{r}
 # Latent-Factor Collaborative Filtering Recommender
 # with matrix factorization by Singular-Value Decomposition (SVD)
- latent_factor_cofi_rec <- Recommender(
+ latent_factor_cofi_rec_SVD <- Recommender(
    data=ratings_train,
    method='SVD',            # Item-Based Collaborative Filtering
    parameter=list(
@@ -121,12 +121,44 @@ recommenderRegistry$get_entry('SVD', dataType='realRatingMatrix')
      method='Pearson'       # use Pearson correlation
    ))
 
-latent_factor_cofi_rec
+latent_factor_cofi_rec_SVD
+
+model_svd <- Recommender(data = ratings_train, method = "SVD")
+
+model_svd
+
+saveRDS(latent_factor_cofi_rec_SVD, file = "model/latent_factor_cofi_rec_SVD_model.rds")
+saveRDS(model_svd, file = "model/model_svd_model.rds")
+
+
 ```
+
+
+
+
+```{r}
+# Latent-Factor Collaborative Filtering Recommender
+# with matrix factorization by Singular-Value Decomposition (SVD)
+ latent_factor_cofi_rec_SVD <- Recommender(
+   data=ratings_train,
+   method='SVD',            # Item-Based Collaborative Filtering
+   parameter=list(
+     categories=30,         # number of latent factors
+     normalize='center',    # normalizing by subtracting average rating per user;
+                            # note that we don't scale by standard deviations here;
+                            # we are assuming people rate on the same scale but have
+                            # different biases
+     method='Pearson'       # use Pearson correlation
+   ))
+
+
+ model_svd <- Recommender(data = ratings_train, method = "SVD")
+```
+
 
 ```{r}
 latent_factor_cofi_rec_pred <- predict(
-  latent_factor_cofi_rec,
+  latent_factor_cofi_rec_SVD,
   ratings_test_known,
   type='ratings')
 
@@ -134,7 +166,7 @@ latent_factor_cofi_red_pred_acc <- calcPredictionAccuracy(
    latent_factor_cofi_rec_pred,
    ratings_test_unknown)
 
- latent_factor_cofi_red_pred_acc
+latent_factor_cofi_red_pred_acc
 ```
 
 

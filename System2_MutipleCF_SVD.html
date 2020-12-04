@@ -406,7 +406,7 @@ evaluation_scheme</code></pre>
 </ul>
 <pre class="r"><code>ratings_train &lt;- getData(evaluation_scheme, &#39;train&#39;)
 ratings_train</code></pre>
-<pre><code>## 3020 x 3706 rating matrix of class &#39;realRatingMatrix&#39; with 500271 ratings.</code></pre>
+<pre><code>## 3020 x 3706 rating matrix of class &#39;realRatingMatrix&#39; with 492521 ratings.</code></pre>
 <ul>
 <li>Test data: “known”/“given” ratings:</li>
 </ul>
@@ -418,7 +418,7 @@ ratings_test_known</code></pre>
 </ul>
 <pre class="r"><code>ratings_test_unknown &lt;- getData(evaluation_scheme, &#39;unknown&#39;)
 ratings_test_unknown</code></pre>
-<pre><code>## 3020 x 3706 rating matrix of class &#39;realRatingMatrix&#39; with 469738 ratings.</code></pre>
+<pre><code>## 3020 x 3706 rating matrix of class &#39;realRatingMatrix&#39; with 477488 ratings.</code></pre>
 <pre class="r"><code>recommenderRegistry$get_entry(&#39;SVD&#39;, dataType=&#39;realRatingMatrix&#39;)</code></pre>
 <pre><code>## Recommender method: SVD for realRatingMatrix
 ## Description: Recommender based on SVD approximation with column-mean imputation.
@@ -429,7 +429,7 @@ ratings_test_unknown</code></pre>
 <p>#We train a Latent-Factor CF recommender as follows:</p>
 <pre class="r"><code># Latent-Factor Collaborative Filtering Recommender
 # with matrix factorization by Singular-Value Decomposition (SVD)
- latent_factor_cofi_rec &lt;- Recommender(
+ latent_factor_cofi_rec_SVD &lt;- Recommender(
    data=ratings_train,
    method=&#39;SVD&#39;,            # Item-Based Collaborative Filtering
    parameter=list(
@@ -446,11 +446,38 @@ ratings_test_unknown</code></pre>
 ## maxiter   =  100
 ## normalize     =  center
 ## verbose   =  FALSE</code></pre>
-<pre class="r"><code>latent_factor_cofi_rec</code></pre>
+<pre class="r"><code>latent_factor_cofi_rec_SVD</code></pre>
 <pre><code>## Recommender of type &#39;SVD&#39; for &#39;realRatingMatrix&#39; 
 ## learned using 3020 users.</code></pre>
+<pre class="r"><code>model_svd &lt;- Recommender(data = ratings_train, method = &quot;SVD&quot;)
+
+model_svd</code></pre>
+<pre><code>## Recommender of type &#39;SVD&#39; for &#39;realRatingMatrix&#39; 
+## learned using 3020 users.</code></pre>
+<pre class="r"><code>saveRDS(latent_factor_cofi_rec_SVD, file = &quot;model/latent_factor_cofi_rec_SVD_model.rds&quot;)
+saveRDS(model_svd, file = &quot;model/model_svd_model.rds&quot;)</code></pre>
+<pre class="r"><code># Latent-Factor Collaborative Filtering Recommender
+# with matrix factorization by Singular-Value Decomposition (SVD)
+ latent_factor_cofi_rec_SVD &lt;- Recommender(
+   data=ratings_train,
+   method=&#39;SVD&#39;,            # Item-Based Collaborative Filtering
+   parameter=list(
+     categories=30,         # number of latent factors
+     normalize=&#39;center&#39;,    # normalizing by subtracting average rating per user;
+                            # note that we don&#39;t scale by standard deviations here;
+                            # we are assuming people rate on the same scale but have
+                            # different biases
+     method=&#39;Pearson&#39;       # use Pearson correlation
+   ))</code></pre>
+<pre><code>## Warning: Unknown parameters: categories, method</code></pre>
+<pre><code>## Available parameter (with default values):
+## k     =  10
+## maxiter   =  100
+## normalize     =  center
+## verbose   =  FALSE</code></pre>
+<pre class="r"><code> model_svd &lt;- Recommender(data = ratings_train, method = &quot;SVD&quot;)</code></pre>
 <pre class="r"><code>latent_factor_cofi_rec_pred &lt;- predict(
-  latent_factor_cofi_rec,
+  latent_factor_cofi_rec_SVD,
   ratings_test_known,
   type=&#39;ratings&#39;)
 
@@ -458,11 +485,11 @@ latent_factor_cofi_red_pred_acc &lt;- calcPredictionAccuracy(
    latent_factor_cofi_rec_pred,
    ratings_test_unknown)
 
- latent_factor_cofi_red_pred_acc</code></pre>
+latent_factor_cofi_red_pred_acc</code></pre>
 <pre><code>##      RMSE       MSE       MAE 
-## 1.0813935 1.1694118 0.8586176</code></pre>
+## 1.0795736 1.1654792 0.8615504</code></pre>
 <pre class="r"><code>Sys.time() - start_time</code></pre>
-<pre><code>## Time difference of 46.6675 secs</code></pre>
+<pre><code>## Time difference of 54.15052 secs</code></pre>
 </div>
 
 
