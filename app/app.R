@@ -12,6 +12,8 @@ databasepath ="data/"
 moviesListFileName = "aggr.dat"
 numberofmovierecommend = 24
 
+set.seed(4486)
+
 source('functions/helpers.R')
 
 # load functions
@@ -20,7 +22,7 @@ source('functions/similarity_measures.R') # similarity measures
 
 # define functions
 get_user_ratings <- function(value_list) {
-  dat <- data.table(UserID=99999,
+  dat <- data.table(UserID= 0,
                     MovieID = sapply(strsplit(names(value_list), "_"), function(x) ifelse(length(x) > 1, x[[2]], NA)),
                     Rating = unlist(as.character(value_list)),
                     Timestamp = as.numeric(Sys.time())
@@ -34,8 +36,12 @@ get_user_ratings <- function(value_list) {
   
   ratings2 = rbind(dat, ratingsdata)
   newratingsdata <- as(ratings2, 'realRatingMatrix')
+
+  #write.table(newratingsdata[1:numberofnewratings,],file="userratings.log",col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
   
   newratingsdata[1:numberofnewratings,]
+
+  
 }
 
 # read in data
@@ -74,7 +80,7 @@ model = Recommender(ratings, "UBCF", param=list(normalize = NULL, method="Cosine
 ui <- dashboardPage(
   
 
-  dashboardHeader(title="Project 4: Movie Recommendation by ZM11"),
+  dashboardHeader(title="Movie Recommend"),
   dashboardSidebar(
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "css/movies.css")
@@ -152,14 +158,17 @@ server <- function(input, output){
 
     # show the books to be rated
     output$ratings <- renderUI({
-      
+     
+      # Reflesh sample      
+      moviesList <- moviesList[sample(nrow(moviesList), 200),]
+
       num_rows <- 20
       num_movies <- 6 # books per row
       
       lapply(1:num_rows, function(i) {
         list(fluidRow(lapply(1:num_movies, function(j) {
           list(box(width = 2,
-                   div(style = "text-align:center", img(src = paste0( "movieImages/", moviesList$MovieID[(i - 1) * num_movies + j], ".jpg"), height="60%", width="60%")),
+                   div(style = "text-align:center", img(src = paste0( "movieImages/", moviesList$MovieID[(i - 1) * num_movies + j], ".jpg"), onerror="this.onerror=null;this.src='movieImages/existent-image.jpg';", height="60%", width="60%")),
                    div(style = "text-align:center", paste0( moviesList$title[(i - 1) * num_movies + j]) ),
                    div(style = "text-align:center; font-size: 150%; color: #f0ad4e;", ratingInput(paste0("select_", moviesList$MovieID[(i - 1) * num_movies + j]), label = "", dataStop = 5))))
         })))
@@ -199,7 +208,7 @@ server <- function(input, output){
         list(fluidRow(lapply(1:num_movies, function(j) {
           box(width = 2, status = "success", solidHeader = TRUE, title = paste0("Rank ", (i - 1) * num_movies + j),
               
-              div(style = "text-align:center", img(src = paste0( "movieImages/", recom_result$MovieID[(i - 1) * num_movies + j], ".jpg"), height="60%", width="60%")),
+              div(style = "text-align:center", img(src = paste0( "movieImages/", recom_result$MovieID[(i - 1) * num_movies + j], ".jpg"), onerror="this.onerror=null;this.src='movieImages/existent-image.jpg';", height="60%", width="60%")),
               div(style = "text-align:center; color: #999999; font-size: 80%", 
                   paste0( recom_result$title[(i - 1) * num_movies + j])
               ),

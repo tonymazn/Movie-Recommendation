@@ -60,7 +60,6 @@ nrow(users)
 #                movie_id = factor(movie_id))]
 
 ratings <- as(ratingsdata, 'realRatingMatrix')
-ratings[1:10]
 
 ```
 
@@ -121,12 +120,19 @@ ratings2[1:numberofnewratings,]
 ```{r}
 
 newratingsdata <- as(ratings2, 'realRatingMatrix')
-newratingsdata[1:numberofnewratings,]
+print(newratingsdata[1:numberofnewratings,])
 
 
 
 
 pred <- predict(UBCF_N_C1, newdata = newratingsdata[1:numberofnewratings,], n = 10)
+as(pred, 'list')
+
+
+#result = as(pred, 'list')
+#result = result[order(pred@items),]
+#result
+
 top10 = as(pred, 'list')[[1]]
 
 top10[1]

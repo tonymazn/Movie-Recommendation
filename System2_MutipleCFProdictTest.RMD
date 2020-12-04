@@ -68,9 +68,15 @@ UBCF_N_C = readRDS("model/UBCF_N_C_model.rds")
 newratingsdata <- as(ratings2, 'realRatingMatrix')
 #newratingsdata[1:numberofnewratings,]
 
+newratingsdata[1,]
 
-pred <- predict(UBCF_N_C, newdata = newratingsdata[1:numberofnewratings,], n = 10)
+
+#pred <- predict(UBCF_N_C, newdata = newratingsdata[1:numberofnewratings,], n = 10)
+pred <- predict(UBCF_N_C, newdata = newratingsdata[1,], n = 10, type="topNList")
 #pred <- predict(UBCF_N_C, newratingsdata, type="ratings")
+
+
+as(pred, 'list')
 
 top10 = as(pred, 'list')[[1]]
 top10

@@ -60,6 +60,11 @@ nrow(users)
 #                movie_id = factor(movie_id))]
 
 ratings <- as(ratings, 'realRatingMatrix')
+
+
+dimnames(ratings)
+ratings
+
 ```
 
 
