@@ -23,7 +23,7 @@ setting = readSetting(settingFile)
 systemI_AlgorithmKey = "SystemI_Algorithm"
 systemII_AlgorithmKey = "SystemII_Algorithm"
 modelpath = paste0("model/", getSetting(setting, systemII_AlgorithmKey)  ,"_model.rds")
-defaultmodelpath = "model/SVD_model.rds"
+defaultmodelpath = "model/No_Para_SVD_model.rds"
 databasepath ="data/"
 moviesListFileName = "aggr.dat"
 numberofmovierecommend = 24
@@ -56,7 +56,7 @@ systemII_algorithm_list = c("UBCF_N_C","UBCF_C_C","UBCF_Z_C", "UBCF_N_E",
                             "UBCF_Z_P", "IBCF_N_C", "IBCF_C_C", "IBCF_Z_C",
                             "IBCF_N_E", "IBCF_C_E", "IBCF_Z_E", "IBCF_N_P",
                             "IBCF_C_P", "IBCF_Z_P", "latent_factor_cofi_rec_SVD",
-                            "SVD")
+                            "No_Para_SVD")
 
 
 systemI_algorithm_Description_list = c("Method1: randomly pick from rating >4(optional) and  genre1 or genre2 or genre3",
@@ -80,7 +80,7 @@ systemII_algorithm_Description_list = c("UBCF_N_C: User-Based CF, normalize = NU
                                         "IBCF_C_P: Item-Based CF, normalize = 'center',method='pearson'",
                                         "IBCF_Z_P: Item-Based CF, normalize = 'Z-score',method='pearson'",
                                         "latent_factor_cofi_rec_SVD: SVD, normalize='center', method='Pearson'",
-                                        "SVD: SVD, normalize=NULL, normalize= default, method=default")
+                                        "No_Para_SVD: SVD, normalize=NULL, normalize= default, method=default")
 
 #model = Recommender(
 #            data=ratings,
