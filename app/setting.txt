@@ -1,2 +1,2 @@
-SystemI_Algorithm:Method2
-SystemII_Algorithm:UBCF_N_C
+SystemI_Algorithm:Method1
+SystemII_Algorithm:No_Para_SVD

@@ -88,6 +88,13 @@ substrRight <- function(x, n){
 
 
 years <- as.data.frame(substr(substrRight(substrRight(years$`movies$title`, 6),5),1,4))
+#years
+
+years
+colMax <- function(data) sapply(data, max, na.rm = TRUE)
+colMax(years)
+
+
 #years <- as.data.frame(substr(substrRight(years$`movies$title`, 5),1,4))
 #years
 
@@ -97,11 +104,12 @@ length(years)
 length(genre_matrix2)
 
 
-search_matrix <- cbind(movies[,1], substr(movies[,2],1,nchar(movies[,2])-6), years, genre_matrix2)
-colnames(search_matrix) <- c("MovieID", "title", "year", genre_list)
-write.csv(search_matrix, "search.csv")
+#search_matrix <- cbind(movies[,1], substr(movies[,2],1,nchar(movies[,2])-6), years, movies[,3], genre_matrix2)
+search_matrix <- cbind(movies[,1], movies[,2], years, movies[,3], genre_matrix2)
+colnames(search_matrix) <- c("MovieID", "title", "year", 'genres', genre_list)
+write.csv(search_matrix, "movies_clean.dat")
 
-search_matrix <- read.csv("search.csv", stringsAsFactors=FALSE)
+search_matrix <- read.csv("movies_clean.dat", stringsAsFactors=FALSE)
 nrow(search_matrix)
 # Example of search an Action movie produced in 1995:
 

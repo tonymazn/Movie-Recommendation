@@ -9,6 +9,7 @@ library(recommenderlab)
 library(data.table)
 library(ShinyRatingInput)
 library(shinyjs)
+library(dplyr)
 
 set.seed(4486)
 source('functions/helpers.R')
@@ -19,7 +20,6 @@ isdebug = FALSE
 
 settingFile = "setting.txt"
 setting = readSetting(settingFile)
-#modelpath = "model/UBCF_N_C_model.rds"
 systemI_AlgorithmKey = "SystemI_Algorithm"
 systemII_AlgorithmKey = "SystemII_Algorithm"
 modelpath = paste0("model/", getSetting(setting, systemII_AlgorithmKey)  ,"_model.rds")
@@ -29,6 +29,7 @@ moviesListFileName = "aggr.dat"
 numberofmovierecommend = 24
 num_rows = 4
 num_movies = 6
+trendyYear = 2000
 
 
 
@@ -36,7 +37,8 @@ num_movies = 6
 moviesList <- read(paste0(databasepath,moviesListFileName), "::")
 movies = read(paste0(databasepath,"movies.dat"), "::")
 ratingsdata = read(paste0(databasepath,"ratings.dat"), "::")
-users = read(paste0(databasepath, "users.dat"), "::")
+users = read(paste0(databasepath,"users.dat"), "::")
+movies_clean <- read.csv(paste0(databasepath,"movies_clean.dat"), stringsAsFactors=FALSE)
 colnames(moviesList) = c( 'MovieID', 'AveRating', 'title', 'genres')
 colnames(movies) = c('MovieID', 'title', 'genres')
 colnames(ratingsdata) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
@@ -60,7 +62,8 @@ systemII_algorithm_list = c("UBCF_N_C","UBCF_C_C","UBCF_Z_C", "UBCF_N_E",
 
 
 systemI_algorithm_Description_list = c("Method1: randomly pick from rating >4(optional) and  genre1 or genre2 or genre3",
-                                       "Method2: genre1(top n rating) or genre2(top n rating) or genre3(top n rating)")
+                                       "Method2: randomly pick most trendy movies in that genres genre1 or genre2 or genre3")
+
 systemII_algorithm_Description_list = c("UBCF_N_C: User-Based CF, normalize = NULL, method='Cosine'",
                                         "UBCF_C_C: User-Based CF, normalize = 'center',method='Cosine'",
                                         "UBCF_Z_C: User-Based CF, normalize = Z-score',method='Cosine'",
@@ -265,18 +268,26 @@ server <- function(input, output){
         #runjs(jsCode)
         
         numberofresult = 60 
-        systemresult = subset(moviesList,AveRating>=4 & (grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE)) )
-        if (nrow(systemresult) < numberofresult){
-           systemresult = subset(moviesList, grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE))
-           systemresult = systemresult[sample(nrow(systemresult), num_rows * num_movies),]
-        }else{
-           systemresult = systemresult[sample(nrow(systemresult), numberofresult),]
+        systemI_Algorithm = getSystemAlgorithm(input$input_SystemI_Algorithm)
+
+        if (systemI_Algorithm == systemI_algorithm_list[1]){
+          # Method 1:
+          systemresult = subset(moviesList,AveRating>=4 & (grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE)) )
+          if (nrow(systemresult) < numberofresult){
+             systemresult = subset(moviesList, grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE))
+             systemresult = systemresult[sample(nrow(systemresult), num_rows * num_movies),]
+          }else{
+             systemresult = systemresult[sample(nrow(systemresult), numberofresult),]
+          }
+        
+        } else {
+          # Method 2:
+          systemresult = subset(movies_clean, year >= trendyYear & (grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE)) )
+          systemresult = systemresult[sample(nrow(systemresult), ifelse(nrow(systemresult)>=numberofmovierecommend,numberofmovierecommend,nrow(systemresult))),]
         }
-        
+
         outputToFile(systemresult, paste0("app1", toString(as.integer(Sys.time()))  ,".log"), isdebug)
-        
         systemresult
-        
        })
     })
     
@@ -287,9 +298,12 @@ server <- function(input, output){
       showNotification(paste0("System Message: Algorithm - ", getSystemAlgorithmDesc(getSetting(setting, systemI_AlgorithmKey))), duration = 5, type = "message" )
       
       recom_result1 <- df_system1()
+      systemI_num_movies = 6
+      systemI_num_rows = nrow(recom_result1) %/% systemI_num_movies
+
       
-      lapply(1:num_rows, function(i) {
-        list(fluidRow(lapply(1:num_movies, function(j) {
+      lapply(1:systemI_num_rows, function(i) {
+        list(fluidRow(lapply(1:systemI_num_movies, function(j) {
           box(width = 2, status = "success", solidHeader = TRUE, title = paste0("Rank ", (i - 1) * num_movies + j),
               
               div(style = "text-align:center", img(src = paste0( "movieImages/", recom_result1$MovieID[(i - 1) * num_movies + j], ".jpg"), onerror="this.onerror=null;this.src='movieImages/existent-image.jpg';", height="60%", width="60%")),
@@ -331,7 +345,7 @@ server <- function(input, output){
 
         recom_results
 
-      }) # still busy
+      })
       
     }) # clicked on button
     
