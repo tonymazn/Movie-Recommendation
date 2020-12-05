@@ -18,8 +18,9 @@ modelpath = "model/svd_model.rds"
 databasepath ="data/"
 moviesListFileName = "aggr.dat"
 numberofmovierecommend = 24
-num_rows <- 4
-num_movies <- 6
+num_rows = 4
+num_movies = 6
+isdebug = FALSE
 
 set.seed(4486)
 source('functions/helpers.R')
@@ -182,7 +183,8 @@ server <- function(input, output){
         }else{
            systemresult = systemresult[sample(nrow(systemresult), numberofresult),]
         }
-        write.table(systemresult, file=  paste0("log/app1", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+        
+        outputToFile(systemresult, paste0("app1", toString(as.integer(Sys.time()))  ,".log"), isdebug)
         
         systemresult
         
@@ -233,9 +235,9 @@ server <- function(input, output){
         recom_resultID = as(pred, 'list')[[1]]
         recom_results <- subset(movies, movies$MovieID %in% recom_resultID)
         
-        write.table(recom_resultID, file=  paste0("log/recom_resultID", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
-        write.table(recom_results, file=  paste0("log/app", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
-        
+        outputToFile(recom_resultID, paste0("recom_resultID", toString(as.integer(Sys.time()))  ,".log"), isdebug)
+        outputToFile(recom_results, paste0("app", toString(as.integer(Sys.time()))  ,".log"), isdebug)
+
         recom_results
 
       }) # still busy

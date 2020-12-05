@@ -27,7 +27,7 @@ get_user_ratings <- function(value_list, ratingsdata) {
   dat <- dat[Rating > 0]
   numberofnewratings = nrow(dat)
   
-  write.table(dat, file=  paste0("log/userratings", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+  #write.table(dat, file=  paste0("log/userratings", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
   
   ratings2 = rbind(dat, ratingsdata)
   newratingsdata <- as(ratings2, 'realRatingMatrix')
@@ -63,6 +63,13 @@ withBusyIndicatorUI <- function(button) {
       )
     )
   )
+}
+
+
+outputToFile <- function(data, fileName, isdebug){
+  if (isdebug){
+     write.table(data, file=  paste0("log/", fileName),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+  }
 }
 
 # Call this function from the server with the button id that is clicked and the
