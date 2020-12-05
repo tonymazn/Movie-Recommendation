@@ -34,14 +34,10 @@ colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
 
 moviesList$MovieID <- as.numeric(moviesList$MovieID)
 
-
-
-
-#ratings <- as(ratingsdata, 'realRatingMatrix')  
 genre_list <- c("Action", "Adventure", "Animation", "Children", 
                 "Comedy", "Crime","Documentary", "Drama", "Fantasy",
-                "Film.Noir", "Horror", "Musical", "Mystery","Romance",
-                "Sci.Fi", "Thriller", "War", "Western")
+                "Film-Noir", "Horror", "Musical", "Mystery","Romance",
+                "Sci-Fi", "Thriller", "War", "Western")
 
 
 #model = Recommender(
@@ -176,10 +172,14 @@ server <- function(input, output){
         #jsCode <- "document.querySelector('[data-widget=collapse]').click();"
         #runjs(jsCode)
         
-        #systemresult = subset(moviesList,AveRating>=4 & (input$input_genre1 %in% genres | input$input_genre2 %in% genres | input$input_genre3 %in% genres) )
+        numberofresult = 60 
         systemresult = subset(moviesList,AveRating>=4 & (grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE)) )
-        systemresult = systemresult[sample(nrow(systemresult), 60),]
-
+        if (nrow(systemresult) < numberofresult){
+           systemresult = subset(moviesList, grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE))
+           systemresult = systemresult[sample(nrow(systemresult), num_rows * num_movies),]
+        }else{
+           systemresult = systemresult[sample(nrow(systemresult), numberofresult),]
+        }
         write.table(systemresult, file=  paste0("log/app1", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
         
         systemresult
@@ -243,7 +243,7 @@ server <- function(input, output){
     
     # display the recommendations
     output$results <- renderUI({
-      recom_result <- df_system1()
+      recom_result <- df_system2()
       
       lapply(1:num_rows, function(i) {
         list(fluidRow(lapply(1:num_movies, function(j) {
