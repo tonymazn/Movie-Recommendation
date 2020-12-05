@@ -150,11 +150,13 @@ server <- function(input, output){
   
     # show the movies to be rated
     output$ratings <- renderUI({
+      num_rows_display = 30
+      num_movies_disaply <- 6
       # Randamly picked movie to display
       moviesDisplay <- moviesList[sample(nrow(moviesList), 200),]
-
-      lapply(1:num_rows, function(i) {
-        list(fluidRow(lapply(1:num_movies, function(j) {
+      
+      lapply(1:num_rows_display, function(i) {
+        list(fluidRow(lapply(1:num_movies_disaply, function(j) {
           list(box(width = 2,
                    div(style = "text-align:center", img(src = paste0( "movieImages/", moviesDisplay$MovieID[(i - 1) * num_movies + j], ".jpg"), onerror="this.onerror=null;this.src='movieImages/existent-image.jpg';", height="60%", width="60%")),
                    div(style = "text-align:center", paste0( moviesDisplay$title[(i - 1) * num_movies + j]) ),
