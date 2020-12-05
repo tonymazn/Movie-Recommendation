@@ -18,7 +18,8 @@ modelpath = "model/svd_model.rds"
 databasepath ="data/"
 moviesListFileName = "aggr.dat"
 numberofmovierecommend = 24
-
+num_rows <- 4
+num_movies <- 6
 
 set.seed(4486)
 source('functions/helpers.R')
@@ -32,7 +33,33 @@ colnames(ratingsdata) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
 colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
 
 moviesList$MovieID <- as.numeric(moviesList$MovieID)
-ratings <- as(ratingsdata, 'realRatingMatrix')  
+
+
+get_user_ratings <- function(value_list) {
+  dat <- data.table(UserID= 0,
+                    MovieID = sapply(strsplit(names(value_list), "_"), function(x) ifelse(length(x) > 1, x[[2]], NA)),
+                    Rating = unlist(as.character(value_list)),
+                    Timestamp = as.integer(Sys.time())
+  )
+
+  dat <- dat[Rating == " ", Rating := 0]
+  dat <- dat[, ':=' (MovieID = as.numeric(MovieID), Rating = as.numeric(Rating))]
+  dat <- na.omit(dat, cols=c("MovieID", "Rating"))
+  dat <- dat[Rating > 0]
+  numberofnewratings = nrow(dat)
+  
+  write.table(dat, file=  paste0("log/userratings", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+  
+  ratings2 = rbind(dat, ratingsdata)
+  newratingsdata <- as(ratings2, 'realRatingMatrix')
+  
+  
+  newratingsdata[1:numberofnewratings,]
+  
+}
+
+
+#ratings <- as(ratingsdata, 'realRatingMatrix')  
 genre_list <- c("Action", "Adventure", "Animation", "Children", 
                 "Comedy", "Crime","Documentary", "Drama", "Fantasy",
                 "Film.Noir", "Horror", "Musical", "Mystery","Romance",
@@ -114,25 +141,25 @@ ui <- dashboardPage(
                                )
                        ),
                        tabItem(tabName = "second",
-                             fluidRow(
-                               box(width = 12, title = "Step 1: Rate as many movies as possible", status = "info", solidHeader = TRUE, collapsible = TRUE,
+                              fluidRow(
+                                box(width = 12, title = "Step 1: Rate as many movies as possible", status = "info", solidHeader = TRUE, collapsible = TRUE,
                                    div(class = "rateitems",
                                        uiOutput('ratings')
                                    )
-                               )
-                             ),
-                             fluidRow(
-                               useShinyjs(),
-                               box(
-                                 width = 12, status = "info", solidHeader = TRUE,
-                                 title = "Step 2: Discover movies you might like",
-                                 br(),
-                                 withBusyIndicatorUI(
-                                   actionButton("btn", "Click here to get your recommendations", class = "btn-warning")
-                                 ),
-                                 br(),
-                                 tableOutput("results")
-                               )
+                                )
+                              ),
+                              fluidRow(
+                                useShinyjs(),
+                                box(
+                                  width = 12, status = "info", solidHeader = TRUE,
+                                  title = "Step 2: Discover movies you might like",
+                                  br(),
+                                  withBusyIndicatorUI(
+                                    actionButton("btn", "Click here to get your recommendations", class = "btn-warning")
+                                  ),
+                                  br(),
+                                  tableOutput("results")
+                                )
                              )
                       )
                )
@@ -152,9 +179,6 @@ server <- function(input, output){
       # Randamly picked movie to display
       moviesDisplay <- moviesList[sample(nrow(moviesList), 200),]
 
-      num_rows <- 20
-      num_movies <- 6 # movies per row
-      
       lapply(1:num_rows, function(i) {
         list(fluidRow(lapply(1:num_movies, function(j) {
           list(box(width = 2,
@@ -165,30 +189,30 @@ server <- function(input, output){
       })
     })
     
-    # Calculate recommendations for System I
-    df1 <- eventReactive(input$btn_genre, {
+    # Calculate recommendations for System I when the submit button is clicked 
+    system1 <- eventReactive(input$btn_genre, {
       withBusyIndicatorServer("btn_genre", { # showing the busy indicator
         # hide the rating container
-        useShinyjs()
+        
+        #useShinyjs()
         #jsCode <- "document.querySelector('[data-widget=collapse]').click();"
         #runjs(jsCode)
         
-        system1result = subset(moviesList,AveRating>=4 & (input$input_genre1 %in% genres | input$input_genre2 %in% genres | input$input_genre3 %in% genres) )
-        system1result = system1result[sample(nrow(system1result), 200),]
+        systemresult = subset(moviesList,AveRating>=4 & (input$input_genre1 %in% genres | input$input_genre2 %in% genres | input$input_genre3 %in% genres) )
+        systemresult = systemresult[sample(nrow(systemresult), 200),]
 
-        write.table(system1result, file=  paste0("log/app1", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+        write.table(systemresult, file=  paste0("log/app1", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
         
-        system1result
+        systemresult
         
-      }) # still busy
+       }) # still busy
       
     }) # clicked on button
     
     # display the recommendations
     output$results_genre <- renderUI({
-      num_rows <- 4
-      num_movies <- 6
-      recom_result1 <- df1()
+
+      recom_result1 <- system1()
       
       lapply(1:num_rows, function(i) {
         list(fluidRow(lapply(1:num_movies, function(j) {
@@ -211,7 +235,7 @@ server <- function(input, output){
     
     
     
-    # Calculate recommendations when the sbumbutton is clicked
+    # Calculate recommendations II when the submit button is clicked
     df <- eventReactive(input$btn, {
       withBusyIndicatorServer("btn", { # showing the busy indicator
         # hide the rating container
@@ -220,8 +244,9 @@ server <- function(input, output){
         runjs(jsCode)
         
         # get the user's rating data
+        
         value_list <- reactiveValuesToList(input)
-        user_ratings <- get_user_ratings(value_list, ratingsdata) 
+        user_ratings <- get_user_ratings(value_list) 
         pred <- predict(model, newdata = user_ratings, n = numberofmovierecommend)
 
         recom_resultID = as(pred, 'list')[[1]]
@@ -239,8 +264,6 @@ server <- function(input, output){
     
     # display the recommendations
     output$results <- renderUI({
-      num_rows <- 4
-      num_movies <- 6
       recom_result <- df()
       
       lapply(1:num_rows, function(i) {
