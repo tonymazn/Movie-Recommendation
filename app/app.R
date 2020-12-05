@@ -9,7 +9,6 @@ library(recommenderlab)
 library(data.table)
 library(ShinyRatingInput)
 library(shinyjs)
-library(dplyr)
 
 set.seed(4486)
 source('functions/helpers.R')
