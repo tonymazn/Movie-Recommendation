@@ -391,9 +391,9 @@ colnames(movies) = c(&#39;MovieID&#39;, &#39;title&#39;, &#39;genres&#39;)
 colnames(ratings) = c(&#39;UserID&#39;, &#39;MovieID&#39;, &#39;Rating&#39;, &#39;Timestamp&#39;)
 colnames(users) = c(&#39;UserID&#39;, &#39;Gender&#39;, &#39;Age&#39;, &#39;Occupation&#39;, &#39;Zip-code&#39;)</code></pre>
 <pre class="r"><code>nrow(movies)</code></pre>
-<pre><code>## [1] 3106</code></pre>
+<pre><code>## [1] 3494</code></pre>
 <pre class="r"><code>nrow(ratings)</code></pre>
-<pre><code>## [1] 801135</code></pre>
+<pre><code>## [1] 902726</code></pre>
 <pre class="r"><code>nrow(users)</code></pre>
 <pre><code>## [1] 6040</code></pre>
 <pre class="r"><code>## Assume that users like similar items, and retrieve movies 
@@ -426,7 +426,7 @@ recommender_model &lt;- Recommender(ratingmat_norm,
 <pre><code>## Warning in .local(x, ...): x was already normalized by row!</code></pre>
 <pre class="r"><code>model_details &lt;- getModel(recommender_model)
 model_details$data</code></pre>
-<pre><code>## 6040 x 2957 rating matrix of class &#39;realRatingMatrix&#39; with 801135 ratings.
+<pre><code>## 6040 x 3326 rating matrix of class &#39;realRatingMatrix&#39; with 902726 ratings.
 ## Normalized using center on rows.</code></pre>
 <pre class="r"><code>recom &lt;- predict(recommender_model, 
                  ratingmat[1], 
@@ -444,24 +444,24 @@ for (i in 1:10){
 }
 
 recom_result</code></pre>
-<pre><code>##       [,1]                                                         
-##  [1,] &quot;Showgirls (1995)&quot;                                           
-##  [2,] &quot;Exotica (1994)&quot;                                             
-##  [3,] &quot;Sliver (1993)&quot;                                              
-##  [4,] &quot;Paradise Lost: The Child Murders at Robin Hood Hills (1996)&quot;
-##  [5,] &quot;War Room, The (1993)&quot;                                       
-##  [6,] &quot;Mask of Zorro, The (1998)&quot;                                  
-##  [7,] &quot;Poison Ivy (1992)&quot;                                          
-##  [8,] &quot;Messenger: The Story of Joan of Arc, The (1999)&quot;            
-##  [9,] &quot;Requiem for a Dream (2000)&quot;                                 
-## [10,] &quot;Billy Madison (1995)&quot;</code></pre>
+<pre><code>##       [,1]                                      
+##  [1,] &quot;Basic Instinct (1992)&quot;                   
+##  [2,] &quot;Showgirls (1995)&quot;                        
+##  [3,] &quot;Sliver (1993)&quot;                           
+##  [4,] &quot;Exotica (1994)&quot;                          
+##  [5,] &quot;Red Violin, The (Le Violon rouge) (1998)&quot;
+##  [6,] &quot;To Live (Huozhe) (1994)&quot;                 
+##  [7,] &quot;Farewell My Concubine (1993)&quot;            
+##  [8,] &quot;Dangerous Liaisons (1988)&quot;               
+##  [9,] &quot;Poison Ivy (1992)&quot;                       
+## [10,] &quot;Bound (1996)&quot;</code></pre>
 <pre class="r"><code># Evaluation:
 #evaluation_scheme &lt;- evaluationScheme(ratingmat,method=&quot;cross-validation&quot;,k=5, given=3, goodRating=5) #k=5 meaning a 5-fold cross validation. given=3 meaning a Given-3 protocol
 #evaluation_results &lt;- evaluate(evaluation_scheme, method=&quot;UBCF&quot;, n=c(1,3,5,10,15,20))
 #eval_results &lt;- getConfusionMatrix(evaluation_results)[[1]]
 #eval_results</code></pre>
 <pre class="r"><code>Sys.time() - start_time</code></pre>
-<pre><code>## Time difference of 21.44839 secs</code></pre>
+<pre><code>## Time difference of 29.10826 secs</code></pre>
 </div>
 
 

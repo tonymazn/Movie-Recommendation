@@ -1,7 +1,6 @@
-# All the code in this file needs to be copied to your Shiny app, and you need
-# to call `withBusyIndicatorUI()` and `withBusyIndicatorServer()` in your app.
-# You can also include the `appCSS` in your UI, as the example app shows.
-
+# 
+# Reference: https://github.com/pspachtholz/BookRecommender
+# 
 # =============================================
 
 
@@ -13,6 +12,30 @@ read <- function(fileName, separators) {
   rownames(dataFrame) <- 1: nrow(dataFrame)
   return(as.data.frame(dataFrame,stringsAsFactors = FALSE))
 }
+
+get_user_ratings <- function(value_list, ratingsdata) {
+  dat <- data.table(UserID= 0,
+                    MovieID = sapply(strsplit(names(value_list), "_"), function(x) ifelse(length(x) > 1, x[[2]], NA)),
+                    Rating = unlist(as.character(value_list)),
+                    Timestamp = as.integer(Sys.time())
+  )
+  dat <- dat[!is.null(Rating) & !is.na(MovieID)]
+  dat[Rating == " ", Rating := 0]
+  dat[, ':=' (MovieID = as.numeric(MovieID), Rating = as.numeric(Rating))]
+  dat <- dat[Rating > 0]
+  numberofnewratings = nrow(dat)
+
+  write.table(dat, file=  paste0("log/userratings", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+  
+  ratings2 = rbind(dat, ratingsdata)
+  newratingsdata <- as(ratings2, 'realRatingMatrix')
+  
+  
+  newratingsdata[1:numberofnewratings,]
+
+}
+
+
 
 # Set up a button to have an animated loading indicator and a checkmark
 # for better user experience

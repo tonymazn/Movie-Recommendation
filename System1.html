@@ -380,8 +380,6 @@ summary {
     rownames(dataFrame) &lt;- 1: nrow(dataFrame)
     return(as.data.frame(dataFrame,stringsAsFactors = FALSE))
 }
-
-
 basedir =&quot;data/train/&quot;
 movies = read(paste0(basedir,&quot;movies.dat&quot;), &quot;::&quot;)
 ratings = read(paste0(basedir,&quot;ratings.dat&quot;), &quot;::&quot;)
@@ -391,27 +389,22 @@ colnames(movies) = c(&#39;MovieID&#39;, &#39;title&#39;, &#39;genres&#39;)
 colnames(ratings) = c(&#39;UserID&#39;, &#39;MovieID&#39;, &#39;Rating&#39;, &#39;Timestamp&#39;)
 colnames(users) = c(&#39;UserID&#39;, &#39;Gender&#39;, &#39;Age&#39;, &#39;Occupation&#39;, &#39;Zip-code&#39;)</code></pre>
 <pre class="r"><code>nrow(movies)</code></pre>
-<pre><code>## [1] 3106</code></pre>
+<pre><code>## [1] 3494</code></pre>
 <pre class="r"><code>nrow(ratings)</code></pre>
-<pre><code>## [1] 801135</code></pre>
+<pre><code>## [1] 902726</code></pre>
 <pre class="r"><code>nrow(users)</code></pre>
 <pre><code>## [1] 6040</code></pre>
 <pre class="r"><code>## Data pre-processing
 genres &lt;- as.data.frame(movies[,3], stringsAsFactors=FALSE)
 genres2 &lt;- as.data.frame(tstrsplit(genres[,1], &#39;[|]&#39;, type.convert=TRUE), stringsAsFactors=FALSE)
 colnames(genres2)&lt;- c(1:5)  #c(1:10)
-
 genre_list &lt;- c(&quot;Action&quot;, &quot;Adventure&quot;, &quot;Animation&quot;, &quot;Children&quot;, 
                 &quot;Comedy&quot;, &quot;Crime&quot;,&quot;Documentary&quot;, &quot;Drama&quot;, &quot;Fantasy&quot;,
                 &quot;Film-Noir&quot;, &quot;Horror&quot;, &quot;Musical&quot;, &quot;Mystery&quot;,&quot;Romance&quot;,
                 &quot;Sci-Fi&quot;, &quot;Thriller&quot;, &quot;War&quot;, &quot;Western&quot;)
-
-
-
 genre_matrix &lt;- matrix(0,nrow(movies) + 1,18) #empty matrix, 10330=no of movies+1, 18=no of genres
 genre_matrix[1,] &lt;- genre_list #set first row to genre list
 colnames(genre_matrix) &lt;- genre_list #set column names to genre list
-
 #iterate through matrix
 for (i in 1:nrow(genres2)) {
   for (c in 1:ncol(genres2)) {
@@ -424,7 +417,7 @@ for (i in 1:nrow(genres2)) {
 genre_matrix2 &lt;- as.data.frame(genre_matrix[-1,], stringsAsFactors=FALSE) #remove first row, which was the genre list
 for (c in 1:ncol(genre_matrix2)) {
   genre_matrix2[,c] &lt;- as.integer(genre_matrix2[,c])
-} 
+}
 
 
 #Create a matrix to search for a movie by genre:
@@ -448,34 +441,80 @@ substrRight &lt;- function(x, n){
 }
 
 
-
 years &lt;- as.data.frame(substr(substrRight(substrRight(years$`movies$title`, 6),5),1,4))
 #years &lt;- as.data.frame(substr(substrRight(years$`movies$title`, 5),1,4))
 #years
 
+
 length(movies[,1])</code></pre>
-<pre><code>## [1] 3106</code></pre>
+<pre><code>## [1] 3494</code></pre>
 <pre class="r"><code>length(substr(movies[,2],1,nchar(movies[,2])-6))</code></pre>
-<pre><code>## [1] 3106</code></pre>
+<pre><code>## [1] 3494</code></pre>
 <pre class="r"><code>length(years)</code></pre>
 <pre><code>## [1] 1</code></pre>
 <pre class="r"><code>length(genre_matrix2)</code></pre>
 <pre><code>## [1] 18</code></pre>
 <pre class="r"><code>search_matrix &lt;- cbind(movies[,1], substr(movies[,2],1,nchar(movies[,2])-6), years, genre_matrix2)
-
 colnames(search_matrix) &lt;- c(&quot;MovieID&quot;, &quot;title&quot;, &quot;year&quot;, genre_list)
-
-
 write.csv(search_matrix, &quot;search.csv&quot;)
+
 search_matrix &lt;- read.csv(&quot;search.csv&quot;, stringsAsFactors=FALSE)
 nrow(search_matrix)</code></pre>
-<pre><code>## [1] 3106</code></pre>
+<pre><code>## [1] 3494</code></pre>
 <pre class="r"><code># Example of search an Action movie produced in 1995:
-subset(search_matrix, Action == 1 &amp; year == 1995)$title[1:5]</code></pre>
+
+result = subset(search_matrix, Action == 1 &amp; year == 1995)
+
+result = result[,c(&quot;MovieID&quot;,&quot;title&quot;,&quot;year&quot;)]
+result</code></pre>
+<pre><code>##      MovieID                                    title year
+## 60       591                        Tough and Deadly  1995
+## 458       10                               GoldenEye  1995
+## 624      624                           Condition Red  1995
+## 699       71                               Fair Game  1995
+## 752      208                              Waterworld  1995
+## 862      401                                  Mirage  1995
+## 909      292                                Outbreak  1995
+## 917        9                            Sudden Death  1995
+## 950       44                           Mortal Kombat  1995
+## 1017    1773                              Tokyo Fist  1995
+## 1023     181 Mighty Morphin Power Rangers: The Movie  1995
+## 1121     153                          Batman Forever  1995
+## 1128     688                    Operation Dumbo Drop  1995
+## 1156     160                                   Congo  1995
+## 1171      89                            Nick of Time  1995
+## 1392     145                                Bad Boys  1995
+## 1422     251                             Hunted, The  1995
+## 1703     168                            First Knight  1995
+## 1743     204           Under Siege 2: Dark Territory  1995
+## 1889     139                                  Target  1995
+## 1994    1364     Zero Kelvin (Kjærlighetens kjøtere)  1995
+## 2095     286                       Nemesis 2: Nebula  1995
+## 2129    1170     Best of the Best 3: No Turning Back  1995
+## 2141      20                             Money Train  1995
+## 2153      21                              Get Shorty  1995
+## 2325    1720                            Time Tracers  1995
+## 2413     165              Die Hard: With a Vengeance  1995
+## 2625      15                        Cutthroat Island  1995
+## 2637     173                             Judge Dredd  1995
+## 2638     198                            Strange Days  1995
+## 2686      42                         Dead Presidents  1995
+## 2717    1181                            Shooter, The  1995
+## 2722     172                         Johnny Mnemonic  1995
+## 2857     163                               Desperado  1995
+## 2900    2818                           Iron Eagle IV  1995
+## 3069     170                                 Hackers  1995
+## 3245     815                                Power 98  1995
+## 3268     110                              Braveheart  1995
+## 3322     112                     Rumble in the Bronx  1995
+## 3334     394                             Coldblooded  1995
+## 3406     327                               Tank Girl  1995
+## 3456     303                 Quick and the Dead, The  1995</code></pre>
+<pre class="r"><code>subset(search_matrix, Action == 1 &amp; year == 1995)$title[1:5]</code></pre>
 <pre><code>## [1] &quot;Tough and Deadly &quot; &quot;GoldenEye &quot;        &quot;Condition Red &quot;   
 ## [4] &quot;Fair Game &quot;        &quot;Waterworld &quot;</code></pre>
 <pre class="r"><code>Sys.time() - start_time</code></pre>
-<pre><code>## Time difference of 13.18242 secs</code></pre>
+<pre><code>## Time difference of 14.7575 secs</code></pre>
 </div>
 
 

@@ -107,8 +107,8 @@ for (i in 1:10){
   recom_result[i] <- as.character(subset(movies,movies$MovieID == as.integer(recom_list[[1]][i]))$title)
 }
 
+recom_result = recom_result[,c("MovieID","title","year")]
 recom_result
-
 ```
 
 
