@@ -14,6 +14,28 @@ read <- function(fileName, separators) {
 }
 
 
+get_user_ratings <- function(value_list, ratingsdata) {
+  dat <- data.table(UserID= 0,
+                    MovieID = sapply(strsplit(names(value_list), "_"), function(x) ifelse(length(x) > 1, x[[2]], NA)),
+                    Rating = unlist(as.character(value_list)),
+                    Timestamp = as.integer(Sys.time())
+  )
+  
+  dat <- dat[Rating == " ", Rating := 0]
+  dat <- dat[, ':=' (MovieID = as.numeric(MovieID), Rating = as.numeric(Rating))]
+  dat <- na.omit(dat, cols=c("MovieID", "Rating"))
+  dat <- dat[Rating > 0]
+  numberofnewratings = nrow(dat)
+  
+  write.table(dat, file=  paste0("log/userratings", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+  
+  ratings2 = rbind(dat, ratingsdata)
+  newratingsdata <- as(ratings2, 'realRatingMatrix')
+  
+  
+  newratingsdata[1:numberofnewratings,]
+  
+}
 
 
 

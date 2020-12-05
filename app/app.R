@@ -35,28 +35,6 @@ colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
 moviesList$MovieID <- as.numeric(moviesList$MovieID)
 
 
-get_user_ratings <- function(value_list) {
-  dat <- data.table(UserID= 0,
-                    MovieID = sapply(strsplit(names(value_list), "_"), function(x) ifelse(length(x) > 1, x[[2]], NA)),
-                    Rating = unlist(as.character(value_list)),
-                    Timestamp = as.integer(Sys.time())
-  )
-
-  dat <- dat[Rating == " ", Rating := 0]
-  dat <- dat[, ':=' (MovieID = as.numeric(MovieID), Rating = as.numeric(Rating))]
-  dat <- na.omit(dat, cols=c("MovieID", "Rating"))
-  dat <- dat[Rating > 0]
-  numberofnewratings = nrow(dat)
-  
-  write.table(dat, file=  paste0("log/userratings", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
-  
-  ratings2 = rbind(dat, ratingsdata)
-  newratingsdata <- as(ratings2, 'realRatingMatrix')
-  
-  
-  newratingsdata[1:numberofnewratings,]
-  
-}
 
 
 #ratings <- as(ratingsdata, 'realRatingMatrix')  
@@ -190,7 +168,7 @@ server <- function(input, output){
     })
     
     # Calculate recommendations for System I when the submit button is clicked 
-    system1 <- eventReactive(input$btn_genre, {
+    df_system1 <- eventReactive(input$btn_genre, {
       withBusyIndicatorServer("btn_genre", { # showing the busy indicator
         # hide the rating container
         
@@ -198,8 +176,9 @@ server <- function(input, output){
         #jsCode <- "document.querySelector('[data-widget=collapse]').click();"
         #runjs(jsCode)
         
-        systemresult = subset(moviesList,AveRating>=4 & (input$input_genre1 %in% genres | input$input_genre2 %in% genres | input$input_genre3 %in% genres) )
-        systemresult = systemresult[sample(nrow(systemresult), 200),]
+        #systemresult = subset(moviesList,AveRating>=4 & (input$input_genre1 %in% genres | input$input_genre2 %in% genres | input$input_genre3 %in% genres) )
+        systemresult = subset(moviesList,AveRating>=4 & (grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE)) )
+        systemresult = systemresult[sample(nrow(systemresult), 60),]
 
         write.table(systemresult, file=  paste0("log/app1", toString(as.integer(Sys.time()))  ,".log"),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
         
@@ -212,7 +191,7 @@ server <- function(input, output){
     # display the recommendations
     output$results_genre <- renderUI({
 
-      recom_result1 <- system1()
+      recom_result1 <- df_system1()
       
       lapply(1:num_rows, function(i) {
         list(fluidRow(lapply(1:num_movies, function(j) {
@@ -236,7 +215,7 @@ server <- function(input, output){
     
     
     # Calculate recommendations II when the submit button is clicked
-    df <- eventReactive(input$btn, {
+    df_system2 <- eventReactive(input$btn, {
       withBusyIndicatorServer("btn", { # showing the busy indicator
         # hide the rating container
         useShinyjs()
@@ -246,7 +225,7 @@ server <- function(input, output){
         # get the user's rating data
         
         value_list <- reactiveValuesToList(input)
-        user_ratings <- get_user_ratings(value_list) 
+        user_ratings <- get_user_ratings(value_list, ratingsdata) 
         pred <- predict(model, newdata = user_ratings, n = numberofmovierecommend)
 
         recom_resultID = as(pred, 'list')[[1]]
@@ -264,7 +243,7 @@ server <- function(input, output){
     
     # display the recommendations
     output$results <- renderUI({
-      recom_result <- df()
+      recom_result <- df_system1()
       
       lapply(1:num_rows, function(i) {
         list(fluidRow(lapply(1:num_movies, function(j) {
