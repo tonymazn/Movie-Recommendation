@@ -35,11 +35,17 @@ colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
 
 moviesList$MovieID <- as.numeric(moviesList$MovieID)
 
-genre_list <- c("Action", "Adventure", "Animation", "Children", 
+genre_list = c("Action", "Adventure", "Animation", "Children", 
                 "Comedy", "Crime","Documentary", "Drama", "Fantasy",
                 "Film-Noir", "Horror", "Musical", "Mystery","Romance",
                 "Sci-Fi", "Thriller", "War", "Western")
 
+systemII_aigorithm_list = c("UBCF_N_C","UBCF_C_C","UBCF_Z_C", "UBCF_N_E", 
+                            "UBCF_C_E", "UBCF_Z_E", "UBCF_N_P", "UBCF_C_P", 
+                            "UBCF_Z_P", "IBCF_N_C", "IBCF_C_C", "IBCF_Z_C",
+                            "IBCF_N_E", "IBCF_C_E", "IBCF_Z_E", "IBCF_N_P",
+                            "IBCF_C_P", "IBCF_Z_P", "latent_factor_cofi_rec_SVD",
+                            "SVD")
 
 #model = Recommender(
 #            data=ratings,
@@ -73,10 +79,11 @@ ui <- dashboardPage(
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "css/movies.css")
     ),
-    
+    uiOutput("userpanel"),
     sidebarMenu(
       menuItem("System I (Genres)", tabName="first", icon=icon("calendar")),
-      menuItem("System II (CF)", tabName = "second", icon=icon("th"))
+      menuItem("System II (CF)", tabName = "second", icon=icon("th")),
+      menuItem("Setting", tabName = "third", icon=icon("cog", lib = "glyphicon"))
     )
   ),
   
@@ -136,8 +143,23 @@ ui <- dashboardPage(
                                   tableOutput("results")
                                 )
                              )
+                      ),
+                      tabItem(tabName = "third",
+                              fluidRow(
+                                box(width = 12,title = "Setting", status = "info", solidHeader = TRUE, collapsible = TRUE,
+                                    div(class = "systemsetting",
+                                        selectInput("input_systemII_aigorithm", "System II Aigorithm",systemII_aigorithm_list),
+                                    ),
+                                    br(),
+                                    withBusyIndicatorUI(
+                                      actionButton("btn_setting", "Click here to Save", class = "btn-warning")
+                                    ),
+                                    br()
+                                    
+                                )
+                              ),
                       )
-               )
+                )
    )
 )
 
@@ -149,9 +171,16 @@ ui <- dashboardPage(
 server <- function(input, output){
     load_data()
   
+    output$userpanel <- renderUI({
+        # session$user is non-NULL only in authenticated sessions
+        sidebarUserPanel(
+           span("NetID: ZM11"),
+           subtitle = a(icon("user", lib = "glyphicon"), "github", href="https://github.com/tonymazn/stat542", target = "_blank"))
+    })
+  
     # show the movies to be rated
     output$ratings <- renderUI({
-      num_rows_display = 30
+      num_rows_display = 20
       num_movies_disaply <- 6
       # Randamly picked movie to display
       moviesDisplay <- moviesList[sample(nrow(moviesList), 200),]
