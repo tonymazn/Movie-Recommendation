@@ -10,20 +10,29 @@ library(data.table)
 library(ShinyRatingInput)
 library(shinyjs)
 
+set.seed(4486)
+source('functions/helpers.R')
+source('functions/setting.R')
 
 
-#modelpath = "model/latent_factor_cofi_rec_SVD_model.rds"
+isdebug = FALSE
+
+settingFile = "setting.txt"
+setting = readSetting(settingFile)
 #modelpath = "model/UBCF_N_C_model.rds"
-modelpath = "model/svd_model.rds"
+systemI_AlgorithmKey = "SystemI_Algorithm"
+systemII_AlgorithmKey = "SystemII_Algorithm"
+modelpath = paste0("model/", getSetting(setting, systemII_AlgorithmKey)  ,"_model.rds")
+defaultmodelpath = "model/SVD_model.rds"
 databasepath ="data/"
 moviesListFileName = "aggr.dat"
 numberofmovierecommend = 24
 num_rows = 4
 num_movies = 6
-isdebug = FALSE
 
-set.seed(4486)
-source('functions/helpers.R')
+
+
+
 moviesList <- read(paste0(databasepath,moviesListFileName), "::")
 movies = read(paste0(databasepath,"movies.dat"), "::")
 ratingsdata = read(paste0(databasepath,"ratings.dat"), "::")
@@ -40,7 +49,9 @@ genre_list = c("Action", "Adventure", "Animation", "Children",
                 "Film-Noir", "Horror", "Musical", "Mystery","Romance",
                 "Sci-Fi", "Thriller", "War", "Western")
 
-systemII_aigorithm_list = c("UBCF_N_C","UBCF_C_C","UBCF_Z_C", "UBCF_N_E", 
+systemI_algorithm_list = c("Method1","Method2") 
+                          
+systemII_algorithm_list = c("UBCF_N_C","UBCF_C_C","UBCF_Z_C", "UBCF_N_E", 
                             "UBCF_C_E", "UBCF_Z_E", "UBCF_N_P", "UBCF_C_P", 
                             "UBCF_Z_P", "IBCF_N_C", "IBCF_C_C", "IBCF_Z_C",
                             "IBCF_N_E", "IBCF_C_E", "IBCF_Z_E", "IBCF_N_P",
@@ -61,14 +72,23 @@ systemII_aigorithm_list = c("UBCF_N_C","UBCF_C_C","UBCF_Z_C", "UBCF_N_E",
  
 #Recommender(ratings, "UBCF", param=list(normalize = NULL, method="Cosine"))
 
-model = readRDS(modelpath)
+
+loadModel = function(){
+   model =  readModel(modelpath)
+   if (is.na(model)){
+      model = readModel(defaultmodelpath)
+   }
+   return(model)
+}
+model = loadModel()
+
 #readRDS(modelpath)
 
-load_data <- function() {
-  Sys.sleep(2)
-  hide("loading_page")
-  show("main_content")
-}
+#load_data <- function() {
+#  Sys.sleep(2)
+#  hide("loading_page")
+#  show("main_content")
+#}
 
 
 
@@ -88,19 +108,19 @@ ui <- dashboardPage(
   ),
   
   dashboardBody(
-        useShinyjs(),
-        div(
-        id = "loading_page",
-           h1("Loading...")
-        ),
-        hidden(
-           div(id = "main_content")
-        ),
+  #      useShinyjs(),
+  #      div(
+  #      id = "loading_page",
+  #         h1("Loading...")
+  #      ),
+  #      hidden(
+  #         div(id = "main_content")
+  #      ),
 
                 tabItems(
                        tabItem(tabName = "first",
                                fluidRow(
-                                 box(width = 12,title = "Step 1: Rate as many movies as possible", status = "info", solidHeader = TRUE, collapsible = TRUE,
+                                 box(width = 12,title = "Step 1: Select movie genres", status = "info", solidHeader = TRUE, collapsible = TRUE,
                                      div(class = "genres",
                                          selectInput("input_genre1", "Genre #1",genre_list),
                                          selectInput("input_genre2", "Genre #2",genre_list),
@@ -148,7 +168,9 @@ ui <- dashboardPage(
                               fluidRow(
                                 box(width = 12,title = "Setting", status = "info", solidHeader = TRUE, collapsible = TRUE,
                                     div(class = "systemsetting",
-                                        selectInput("input_systemII_aigorithm", "System II Aigorithm",systemII_aigorithm_list),
+                                        verbatimTextOutput("message"),
+                                        selectInput("input_SystemI_Algorithm", "System I Algorithm",systemI_algorithm_list, selected = getSetting(setting, systemI_AlgorithmKey)),
+                                        selectInput("input_systemII_Algorithm", "System II Algorithm",systemII_algorithm_list, selected = getSetting(setting, systemII_AlgorithmKey))
                                     ),
                                     br(),
                                     withBusyIndicatorUI(
@@ -169,7 +191,7 @@ ui <- dashboardPage(
 
 
 server <- function(input, output){
-    load_data()
+ #   load_data()
   
     output$userpanel <- renderUI({
         # session$user is non-NULL only in authenticated sessions
@@ -217,13 +239,15 @@ server <- function(input, output){
         
         systemresult
         
-       }) # still busy
-      
-    }) # clicked on button
+       })
+    })
+    
+    
     
     # display the recommendations
     output$results_genre <- renderUI({
-
+      showNotification(paste0("System Message: Algorithm - ",  getSetting(setting, systemI_AlgorithmKey) ), duration = 3, type = "message" )
+      
       recom_result1 <- df_system1()
       
       lapply(1:num_rows, function(i) {
@@ -276,6 +300,8 @@ server <- function(input, output){
     
     # display the recommendations
     output$results <- renderUI({
+      showNotification(paste0("System Message: Algorithm - ",  getSetting(setting, systemII_AlgorithmKey) ), duration = 3, type = "message" )
+      
       recom_result <- df_system2()
       
       lapply(1:num_rows, function(i) {
@@ -291,10 +317,24 @@ server <- function(input, output){
               )
               
           )        
-        }))) # columns
-      }) # rows
+        })))
+      })
       
-    }) # renderUI function
+    })
+
+    
+    observeEvent(input$btn_setting, {
+      # Save the ID for removal later
+
+      setting <<- setSetting(setting, systemI_AlgorithmKey, input$input_SystemI_Algorithm)
+      setting <<- setSetting(setting, systemII_AlgorithmKey, input$input_systemII_Algorithm)
+      write(setting, settingFile, ":")
+      modelpath <<- paste0("model/", getSetting(setting, systemII_AlgorithmKey)  ,"_model.rds")
+      model <<- loadModel()
+      
+      showNotification("System Message: Setting Saved", duration = 5, type = "message" )
+      #showNotification(paste0("System Message: Algorithm - ",  getSetting(setting, systemII_AlgorithmKey) )  , duration = 5, type = "message" )
+    })
 
 }
 

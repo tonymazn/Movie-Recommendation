@@ -1,0 +1,58 @@
+---
+title: "Test"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## setting test
+```{r}
+read <- function(fileName, separators) {
+    data <- readLines(con <- file(fileName))
+    close(con)
+    records <- sapply(data, strsplit, split=separators)
+    dataFrame <- data.frame(t(sapply(records,c)))
+    rownames(dataFrame) <- 1: nrow(dataFrame)
+    return(as.data.frame(dataFrame,stringsAsFactors = FALSE))
+}
+
+readSetting <- function(filename){
+   setting = read("setting.txt", ":")
+   colnames(setting) = c('Key', 'Value')
+   setting
+}
+
+write <- function(dataset, file, separators){
+    df = data.frame(dataset)
+    write.table(df,file=file, col.names=FALSE,row.names=FALSE,sep=separators,quote=FALSE)
+}
+
+setSetting <- function(setting, key, newValue){
+   setting[which(setting$Key == key),"Value"] = newValue
+}
+
+getSetting <- function(setting, key){
+   setting[which(setting$Key == key),"Value"]
+}
+
+
+setting = readSetting("setting.txt")
+setting
+
+#get value
+getSetting(setting, "SystemI_Algorithm")
+
+#set Value
+setting[which(setting$Key == "SystemI_Algorithm"),"Value"] = "Method2"
+setting
+
+
+#Save
+write(setting, "setting.txt", ":")
+```
+
+

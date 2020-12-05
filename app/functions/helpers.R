@@ -1,7 +1,8 @@
+# =============================================================
 # 
 # Reference: https://github.com/pspachtholz/BookRecommender
 # 
-# =============================================
+# =============================================================
 
 
 read <- function(fileName, separators) {
@@ -38,6 +39,21 @@ get_user_ratings <- function(value_list, ratingsdata) {
 }
 
 
+readModel <- function(modelPath){
+  out <- tryCatch(  
+     {
+        readRDS(modelPath)
+     },
+     error = function(w){
+       #outputToFile(paste0("Read Model", modelPath  , " Error"), "error.log", TRUE)
+       return(NA)
+     },
+     finally = {
+     }
+  )
+  return(out)
+}
+
 
 # Set up a button to have an animated loading indicator and a checkmark
 # for better user experience
@@ -68,7 +84,7 @@ withBusyIndicatorUI <- function(button) {
 
 outputToFile <- function(data, fileName, isdebug){
   if (isdebug){
-     write.table(data, file=  paste0("log/", fileName),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
+     write.table(data, file = paste0("log/", fileName),col.names=FALSE,row.names=FALSE,sep=",",quote=FALSE)
   }
 }
 

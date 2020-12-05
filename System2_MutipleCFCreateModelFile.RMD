@@ -244,8 +244,8 @@ recommenderRegistry$get_entry('SVD', dataType='realRatingMatrix')
  reloadModel = readRDS("model/latent_factor_cofi_rec_SVD_model.rds")
 
  svd <- Recommender(data = getData(e, "train"), method = "SVD")
- saveRDS(svd, file = "model/svd_model.rds")
- reloadModel = readRDS("model/svd_model.rds")
+ saveRDS(svd, file = "model/SVD_model.rds")
+ reloadModel = readRDS("model/SVD_model.rds")
  
 ```
 
