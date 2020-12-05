@@ -58,6 +58,30 @@ systemII_algorithm_list = c("UBCF_N_C","UBCF_C_C","UBCF_Z_C", "UBCF_N_E",
                             "IBCF_C_P", "IBCF_Z_P", "latent_factor_cofi_rec_SVD",
                             "SVD")
 
+
+systemI_algorithm_Description_list = c("Method1: randomly pick from rating >4(optional) and  genre1 or genre2 or genre3",
+                                       "Method2: genre1(top n rating) or genre2(top n rating) or genre3(top n rating)")
+systemII_algorithm_Description_list = c("UBCF_N_C: User-Based CF, normalize = NULL, method='Cosine'",
+                                        "UBCF_C_C: User-Based CF, normalize = 'center',method='Cosine'",
+                                        "UBCF_Z_C: User-Based CF, normalize = Z-score',method='Cosine'",
+                                        "UBCF_N_E: User-Based CF, normalize = NULL, method=Euclidean",
+                                        "UBCF_C_E: User-Based CF, normalize = 'center',method='Euclidean'",
+                                        "UBCF_Z_E: User-Based CF, normalize = 'Z-score',method='Euclidean'",
+                                        "UBCF_N_P: User-Based CF, normalize = NULL, method='pearson'",
+                                        "UBCF_C_P: User-Based CF, normalize = 'center',method='pearson'",
+                                        "UBCF_Z_P: User-Based CF, normalize = 'Z-score',method='pearson'",
+                                        "IBCF_N_C: Item-Based CF, normalize = NULL, method='Cosine'",
+                                        "IBCF_C_C: Item-Based CF, normalize = 'center',method='Cosine'",
+                                        "IBCF_Z_C: Item-Based CF, normalize = Z-score',method='Cosine'",
+                                        "IBCF_N_E: Item-Based CF, normalize = NULL, method=Euclidean",
+                                        "IBCF_C_E: Item-Based CF, normalize = 'center',method='Euclidean'",
+                                        "IBCF_Z_E: Item-Based CF, normalize = 'Z-score',method='Euclidean'",
+                                        "IBCF_N_P: Item-Based CF, normalize = NULL, method='pearson'",
+                                        "IBCF_C_P: Item-Based CF, normalize = 'center',method='pearson'",
+                                        "IBCF_Z_P: Item-Based CF, normalize = 'Z-score',method='pearson'",
+                                        "latent_factor_cofi_rec_SVD: SVD, normalize='center', method='Pearson'",
+                                        "SVD: SVD, normalize=NULL, normalize= default, method=default")
+
 #model = Recommender(
 #            data=ratings,
 #            method='SVD',            # Item-Based Collaborative Filtering
@@ -81,6 +105,20 @@ loadModel = function(){
    return(model)
 }
 model = loadModel()
+
+
+getSystemAlgorithm = function(description){
+  result = strsplit(description, ":")
+  return(result[1])
+}
+
+getSystemAlgorithmDesc = function(code){
+  index = which(grepl(code, systemII_algorithm_Description_list, fixed = TRUE))[1]
+  if(!is.na(index)){
+      return(systemII_algorithm_Description_list[index])
+  }
+  return(systemI_algorithm_Description_list[which(grepl(code, systemI_algorithm_Description_list, fixed = TRUE))])
+}
 
 #readRDS(modelpath)
 
@@ -169,8 +207,8 @@ ui <- dashboardPage(
                                 box(width = 12,title = "Setting", status = "info", solidHeader = TRUE, collapsible = TRUE,
                                     div(class = "systemsetting",
                                         verbatimTextOutput("message"),
-                                        selectInput("input_SystemI_Algorithm", "System I Algorithm",systemI_algorithm_list, selected = getSetting(setting, systemI_AlgorithmKey)),
-                                        selectInput("input_systemII_Algorithm", "System II Algorithm",systemII_algorithm_list, selected = getSetting(setting, systemII_AlgorithmKey))
+                                        selectInput("input_SystemI_Algorithm", "System I Algorithm",systemI_algorithm_Description_list, selected = getSystemAlgorithmDesc(getSetting(setting, systemI_AlgorithmKey))),
+                                        selectInput("input_systemII_Algorithm", "System II Algorithm",systemII_algorithm_Description_list, selected = getSystemAlgorithmDesc(getSetting(setting, systemII_AlgorithmKey)))
                                     ),
                                     br(),
                                     withBusyIndicatorUI(
@@ -246,7 +284,7 @@ server <- function(input, output){
     
     # display the recommendations
     output$results_genre <- renderUI({
-      showNotification(paste0("System Message: Algorithm - ",  getSetting(setting, systemI_AlgorithmKey) ), duration = 3, type = "message" )
+      showNotification(paste0("System Message: Algorithm - ", getSystemAlgorithmDesc(getSetting(setting, systemI_AlgorithmKey))), duration = 5, type = "message" )
       
       recom_result1 <- df_system1()
       
@@ -300,7 +338,7 @@ server <- function(input, output){
     
     # display the recommendations
     output$results <- renderUI({
-      showNotification(paste0("System Message: Algorithm - ",  getSetting(setting, systemII_AlgorithmKey) ), duration = 3, type = "message" )
+      showNotification(paste0("System Message: Algorithm - ",  getSystemAlgorithmDesc(getSetting(setting, systemII_AlgorithmKey)) ), duration = 5, type = "message" )
       
       recom_result <- df_system2()
       
@@ -326,8 +364,10 @@ server <- function(input, output){
     observeEvent(input$btn_setting, {
       # Save the ID for removal later
 
-      setting <<- setSetting(setting, systemI_AlgorithmKey, input$input_SystemI_Algorithm)
-      setting <<- setSetting(setting, systemII_AlgorithmKey, input$input_systemII_Algorithm)
+      systemI_Algorithm = getSystemAlgorithm(input$input_SystemI_Algorithm)
+      systemII_Algorithm = getSystemAlgorithm(input$input_systemII_Algorithm)
+      setting <<- setSetting(setting, systemI_AlgorithmKey, systemI_Algorithm)
+      setting <<- setSetting(setting, systemII_AlgorithmKey, systemII_Algorithm)
       write(setting, settingFile, ":")
       modelpath <<- paste0("model/", getSetting(setting, systemII_AlgorithmKey)  ,"_model.rds")
       model <<- loadModel()
