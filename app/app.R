@@ -272,19 +272,16 @@ server <- function(input, output){
         #jsCode <- "document.querySelector('[data-widget=collapse]').click();"
         #runjs(jsCode)
         
-        numberofresult = 60 
         systemI_Algorithm = getSystemAlgorithm(input$input_SystemI_Algorithm)
 
         if (systemI_Algorithm == systemI_algorithm_list[1]){
           # Method 1:
           systemresult = subset(moviesList,AveRating>=4 & (grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE)) )
-          if (nrow(systemresult) < numberofresult){
+          if (nrow(systemresult) < num_movies * num_rows){
              systemresult = subset(moviesList, grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE))
-             systemresult = systemresult[sample(nrow(systemresult), num_rows * num_movies),]
-          }else{
-             systemresult = systemresult[sample(nrow(systemresult), numberofresult),]
           }
-        
+          systemresult = systemresult[sample(nrow(systemresult), ifelse(nrow(systemresult)>=numberofmovierecommend,numberofmovierecommend,nrow(systemresult))),]
+          
         } else {
           # Method 2:
           systemresult = subset(movies_clean, year >= trendyYear & (grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE)) )
