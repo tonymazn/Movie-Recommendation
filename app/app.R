@@ -24,7 +24,7 @@ systemII_AlgorithmKey = "SystemII_Algorithm"
 modelpath = paste0("model/", getSetting(setting, systemII_AlgorithmKey)  ,"_model.rds")
 defaultmodelpath = "model/No_Para_SVD_model.rds"
 databasepath ="data/"
-moviesListFileName = "aggr.dat"
+moviesListFileName = "aggr200.dat"
 numberofmovierecommend = 24
 num_rows = 4
 num_movies = 6
@@ -245,11 +245,14 @@ server <- function(input, output){
   
     # show the movies to be rated
     output$ratings <- renderUI({
-      num_rows_display = 20
-      num_movies_disaply <- 6
+      num_movies_disaply = 6
+      num_rows_display = 10
+      
+      logfile = paste0("app", toString(as.integer(Sys.time()))  ,".log")
+
       # Randamly picked movie to display
       moviesDisplay <- moviesList[sample(nrow(moviesList), 200),]
-      
+
       lapply(1:num_rows_display, function(i) {
         list(fluidRow(lapply(1:num_movies_disaply, function(j) {
           list(box(width = 2,
