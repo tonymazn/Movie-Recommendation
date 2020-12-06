@@ -105,20 +105,29 @@ length(genre_matrix2)
 
 
 #search_matrix <- cbind(movies[,1], substr(movies[,2],1,nchar(movies[,2])-6), years, movies[,3], genre_matrix2)
-search_matrix <- cbind(movies[,1], movies[,2], years, movies[,3], genre_matrix2)
-colnames(search_matrix) <- c("MovieID", "title", "year", 'genres', genre_list)
-write.csv(search_matrix, "movies_clean.dat")
+search_matrix <- cbind(movies[,1], movies[,2], years, movies[,3])
+colnames(search_matrix) <- c("MovieID", "title", "year", 'genres')
 
-search_matrix <- read.csv("movies_clean.dat", stringsAsFactors=FALSE)
+df = data.frame(search_matrix)
+nrow(df)
+write.table(df,file="movies_clean.dat", col.names=FALSE,row.names=FALSE,sep="::",quote=FALSE)
+
+#write.csv(search_matrix, "movies_clean.dat")
+
+#search_matrix <- read.csv("movies_clean.dat", stringsAsFactors=FALSE)
+
+search_matrix <- read("movies_clean.dat", "::")
+colnames(search_matrix) = c("MovieID", "title", "year", 'genres')
 nrow(search_matrix)
+head(search_matrix)
 # Example of search an Action movie produced in 1995:
 
-result = subset(search_matrix, Action == 1 & year == 1995)
+#result = subset(search_matrix, Action == 1 & year == 1995)
 
-result = result[,c("MovieID","title","year")]
-result
+#result = result[,c("MovieID","title","year")]
+#result
 
-subset(search_matrix, Action == 1 & year == 1995)$title[1:5]
+#subset(search_matrix, Action == 1 & year == 1995)$title[1:5]
 ```
 
 

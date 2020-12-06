@@ -3957,68 +3957,40 @@ length(movies[,1])</code></pre>
 <pre class="r"><code>length(genre_matrix2)</code></pre>
 <pre><code>## [1] 18</code></pre>
 <pre class="r"><code>#search_matrix &lt;- cbind(movies[,1], substr(movies[,2],1,nchar(movies[,2])-6), years, movies[,3], genre_matrix2)
-search_matrix &lt;- cbind(movies[,1], movies[,2], years, movies[,3], genre_matrix2)
-colnames(search_matrix) &lt;- c(&quot;MovieID&quot;, &quot;title&quot;, &quot;year&quot;, &#39;genres&#39;, genre_list)
-write.csv(search_matrix, &quot;movies_clean.dat&quot;)
+search_matrix &lt;- cbind(movies[,1], movies[,2], years, movies[,3])
+colnames(search_matrix) &lt;- c(&quot;MovieID&quot;, &quot;title&quot;, &quot;year&quot;, &#39;genres&#39;)
 
-search_matrix &lt;- read.csv(&quot;movies_clean.dat&quot;, stringsAsFactors=FALSE)
+df = data.frame(search_matrix)
+nrow(df)</code></pre>
+<pre><code>## [1] 3494</code></pre>
+<pre class="r"><code>write.table(df,file=&quot;movies_clean.dat&quot;, col.names=FALSE,row.names=FALSE,sep=&quot;::&quot;,quote=FALSE)
+
+#write.csv(search_matrix, &quot;movies_clean.dat&quot;)
+
+#search_matrix &lt;- read.csv(&quot;movies_clean.dat&quot;, stringsAsFactors=FALSE)
+
+search_matrix &lt;- read(&quot;movies_clean.dat&quot;, &quot;::&quot;)
+colnames(search_matrix) = c(&quot;MovieID&quot;, &quot;title&quot;, &quot;year&quot;, &#39;genres&#39;)
 nrow(search_matrix)</code></pre>
 <pre><code>## [1] 3494</code></pre>
+<pre class="r"><code>head(search_matrix)</code></pre>
+<pre><code>##   MovieID                                    title year               genres
+## 1    2531 Battle for the Planet of the Apes (1973) 1973        Action|Sci-Fi
+## 2    2579                         Following (1998) 1998                Drama
+## 3    2295                    Impostors, The (1998) 1998               Comedy
+## 4     529       Searching for Bobby Fischer (1993) 1993                Drama
+## 5     196                           Species (1995) 1995        Horror|Sci-Fi
+## 6    3054          Pokémon: The First Movie (1998) 1998 Animation|Children&#39;s</code></pre>
 <pre class="r"><code># Example of search an Action movie produced in 1995:
 
-result = subset(search_matrix, Action == 1 &amp; year == 1995)
+#result = subset(search_matrix, Action == 1 &amp; year == 1995)
 
-result = result[,c(&quot;MovieID&quot;,&quot;title&quot;,&quot;year&quot;)]
-result</code></pre>
-<pre><code>##      MovieID                                          title year
-## 60       591                        Tough and Deadly (1995) 1995
-## 458       10                               GoldenEye (1995) 1995
-## 624      624                           Condition Red (1995) 1995
-## 699       71                               Fair Game (1995) 1995
-## 752      208                              Waterworld (1995) 1995
-## 862      401                                  Mirage (1995) 1995
-## 909      292                                Outbreak (1995) 1995
-## 917        9                            Sudden Death (1995) 1995
-## 950       44                           Mortal Kombat (1995) 1995
-## 1017    1773                              Tokyo Fist (1995) 1995
-## 1023     181 Mighty Morphin Power Rangers: The Movie (1995) 1995
-## 1121     153                          Batman Forever (1995) 1995
-## 1128     688                    Operation Dumbo Drop (1995) 1995
-## 1156     160                                   Congo (1995) 1995
-## 1171      89                            Nick of Time (1995) 1995
-## 1392     145                                Bad Boys (1995) 1995
-## 1422     251                             Hunted, The (1995) 1995
-## 1703     168                            First Knight (1995) 1995
-## 1743     204           Under Siege 2: Dark Territory (1995) 1995
-## 1889     139                                  Target (1995) 1995
-## 1994    1364     Zero Kelvin (Kjærlighetens kjøtere) (1995) 1995
-## 2095     286                       Nemesis 2: Nebula (1995) 1995
-## 2129    1170     Best of the Best 3: No Turning Back (1995) 1995
-## 2141      20                             Money Train (1995) 1995
-## 2153      21                              Get Shorty (1995) 1995
-## 2325    1720                            Time Tracers (1995) 1995
-## 2413     165              Die Hard: With a Vengeance (1995) 1995
-## 2625      15                        Cutthroat Island (1995) 1995
-## 2637     173                             Judge Dredd (1995) 1995
-## 2638     198                            Strange Days (1995) 1995
-## 2686      42                         Dead Presidents (1995) 1995
-## 2717    1181                            Shooter, The (1995) 1995
-## 2722     172                         Johnny Mnemonic (1995) 1995
-## 2857     163                               Desperado (1995) 1995
-## 2900    2818                           Iron Eagle IV (1995) 1995
-## 3069     170                                 Hackers (1995) 1995
-## 3245     815                                Power 98 (1995) 1995
-## 3268     110                              Braveheart (1995) 1995
-## 3322     112                     Rumble in the Bronx (1995) 1995
-## 3334     394                             Coldblooded (1995) 1995
-## 3406     327                               Tank Girl (1995) 1995
-## 3456     303                 Quick and the Dead, The (1995) 1995</code></pre>
-<pre class="r"><code>subset(search_matrix, Action == 1 &amp; year == 1995)$title[1:5]</code></pre>
-<pre><code>## [1] &quot;Tough and Deadly (1995)&quot; &quot;GoldenEye (1995)&quot;       
-## [3] &quot;Condition Red (1995)&quot;    &quot;Fair Game (1995)&quot;       
-## [5] &quot;Waterworld (1995)&quot;</code></pre>
+#result = result[,c(&quot;MovieID&quot;,&quot;title&quot;,&quot;year&quot;)]
+#result
+
+#subset(search_matrix, Action == 1 &amp; year == 1995)$title[1:5]</code></pre>
 <pre class="r"><code>Sys.time() - start_time</code></pre>
-<pre><code>## Time difference of 15.72448 secs</code></pre>
+<pre><code>## Time difference of 14.31477 secs</code></pre>
 </div>
 
 

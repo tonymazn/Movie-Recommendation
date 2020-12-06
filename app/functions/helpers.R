@@ -6,7 +6,7 @@
 
 
 read <- function(fileName, separators) {
-  data <- readLines(con <- file(fileName))
+  data <- readLines(con <- file(fileName),  encoding = "UTF-8" )
   close(con)
   records <- sapply(data, strsplit, split=separators)
   dataFrame <- data.frame(t(sapply(records,c)))
