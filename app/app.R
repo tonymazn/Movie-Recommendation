@@ -113,7 +113,7 @@ model = loadModel()
 
 
 getSystemAlgorithm = function(description){
-  result = strsplit(description, ":")
+  result = strsplit(description, ":")[[1]]
   return(result[1])
 }
 
