@@ -86,19 +86,6 @@ systemII_algorithm_Description_list = c("UBCF_N_C: User-Based CF, normalize = NU
                                         "latent_factor_cofi_rec_SVD: SVD, normalize='center', method='Pearson'",
                                         "No_Para_SVD: SVD, normalize=NULL, normalize= default, method=default")
 
-#model = Recommender(
-#            data=ratings,
-#            method='SVD',            # Item-Based Collaborative Filtering
-#            parameter=list(
-#                  categories=30,         # number of latent factors
-#                  normalize='center',    # normalizing by subtracting average rating per user;
-#                                         # note that we don't scale by standard deviations here;
-#                                         # we are assuming people rate on the same scale but have
-#                                         # different biases
-#                  method='Pearson'       # use Pearson correlation
-#            ))
- 
-#Recommender(ratings, "UBCF", param=list(normalize = NULL, method="Cosine"))
 
 
 loadModel = function(){
@@ -124,14 +111,6 @@ getSystemAlgorithmDesc = function(code){
   return(systemI_algorithm_Description_list[which(grepl(code, systemI_algorithm_Description_list, fixed = TRUE))])
 }
 
-#readRDS(modelpath)
-
-#load_data <- function() {
-#  Sys.sleep(2)
-#  hide("loading_page")
-#  show("main_content")
-#}
-
 
 
 ui <- dashboardPage(
@@ -142,7 +121,7 @@ ui <- dashboardPage(
       tags$link(rel = "stylesheet", type = "text/css", href = "css/movies.css")
     ),
     uiOutput("userpanel"),
-    sidebarMenu(
+    sidebarMenu(id = "tabs",
       menuItem("System I (Genres)", tabName="first", icon=icon("calendar")),
       menuItem("System II (CF)", tabName = "second", icon=icon("th")),
       menuItem("Setting", tabName = "third", icon=icon("cog", lib = "glyphicon"))
@@ -150,15 +129,6 @@ ui <- dashboardPage(
   ),
   
   dashboardBody(
-  #      useShinyjs(),
-  #      div(
-  #      id = "loading_page",
-  #         h1("Loading...")
-  #      ),
-  #      hidden(
-  #         div(id = "main_content")
-  #      ),
-
                 tabItems(
                        tabItem(tabName = "first",
                                fluidRow(
@@ -265,12 +235,6 @@ server <- function(input, output){
     # Calculate recommendations for System I when the submit button is clicked 
     df_system1 <- eventReactive(input$btn_genre, {
       withBusyIndicatorServer("btn_genre", { # showing the busy indicator
-        # hide the rating container
-        
-        #useShinyjs()
-        #jsCode <- "document.querySelector('[data-widget=collapse]').click();"
-        #runjs(jsCode)
-
         num_rows = 4
         num_movies = 6
 
@@ -298,7 +262,7 @@ server <- function(input, output){
     
     
     
-    # display the recommendations
+    # display the recommendations System I
     output$results_genre <- renderUI({
       showNotification(paste0("System Message: System I Algorithm - ", getSystemAlgorithmDesc(getSetting(setting, systemI_AlgorithmKey))), duration = 5, type = "message" )
       
@@ -322,7 +286,7 @@ server <- function(input, output){
           }))) # columns
          }) # rows
       }else{
-        showNotification("System Message: there is no movie found", duration = 5, type = "error")
+        showNotification("System Message: there is no movie found", duration = 4, type = "error")
       }
 
     }) # renderUI function
@@ -356,7 +320,7 @@ server <- function(input, output){
     }) # clicked on button
     
     
-    # display the recommendations
+    # display the recommendations System II
     output$results <- renderUI({
       showNotification(paste0("System Message: System II Algorithm - ",  getSystemAlgorithmDesc(getSetting(setting, systemII_AlgorithmKey)) ), duration = 5, type = "message" )
       
@@ -382,12 +346,12 @@ server <- function(input, output){
           })))
         })
       }else{
-        showNotification("System Message: there is no movie found", duration = 5, type = "error")
+        showNotification("System Message: there is no movie found", duration = 4, type = "error")
       }
       
     })
 
-    
+
     observeEvent(input$btn_setting, {
       # Save the ID for removal later
 
@@ -402,6 +366,8 @@ server <- function(input, output){
       showNotification("System Message: Setting Saved", duration = 5, type = "message" )
       #showNotification(paste0("System Message: Algorithm - ",  getSetting(setting, systemII_AlgorithmKey) )  , duration = 5, type = "message" )
     })
+    
+
 
 }
 
