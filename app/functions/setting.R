@@ -7,9 +7,9 @@
 source('functions/helpers.R')
 
 readSetting <- function(filename){
-  setting = read("setting.txt", ":")
-  colnames(setting) = c('Key', 'Value')
-  setting
+  allSetting = read(filename, ":")
+  colnames(allSetting) = c('Key', 'Value')
+  allSetting
 }
 
 write <- function(dataset, file, separators){
