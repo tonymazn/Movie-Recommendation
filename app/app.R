@@ -17,6 +17,7 @@ source('functions/setting.R')
 
 isdebug = FALSE
 
+version = "1.0.0.0"
 settingFile = "setting.txt"
 setting = readSetting(settingFile)
 systemI_AlgorithmKey = "SystemI_Algorithm"
@@ -63,7 +64,7 @@ systemII_algorithm_list = c("UBCF_N_C","UBCF_C_C","UBCF_Z_C", "UBCF_N_E",
                             "No_Para_SVD")
 
 
-systemI_algorithm_Description_list = c("Method1: randomly pick from rating >4(optional) and  genre1 or genre2 or genre3",
+systemI_algorithm_Description_list = c("Method1: randomly pick from rating >= 4(optional) and  genre1 or genre2 or genre3",
                                        "Method2: randomly pick most trendy movies in that genres genre1 or genre2 or genre3")
 
 systemII_algorithm_Description_list = c("UBCF_N_C: User-Based CF, normalize = NULL, method='Cosine'",
@@ -240,7 +241,7 @@ server <- function(input, output){
         # session$user is non-NULL only in authenticated sessions
         sidebarUserPanel(
            span("NetID: ZM11"),
-           subtitle = a(icon("user", lib = "glyphicon"), "github", href="https://github.com/tonymazn/stat542", target = "_blank"))
+           subtitle = a(icon("user", lib = "glyphicon"), paste0("github  v", version), href="https://github.com/tonymazn/stat542", target = "_blank"))
     })
   
     # show the movies to be rated
