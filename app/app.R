@@ -26,9 +26,7 @@ modelpath = paste0("model/", getSetting(setting, systemII_AlgorithmKey)  ,"_mode
 defaultmodelpath = "model/No_Para_SVD_model.rds"
 databasepath ="data/"
 moviesListFileName = "aggr200.dat"
-numberofmovierecommend = 24
-num_rows = 4
-num_movies = 6
+numberofmovierecommend = 4 * 6
 trendyYear = 2000
 
 
@@ -257,9 +255,9 @@ server <- function(input, output){
       lapply(1:num_rows_display, function(i) {
         list(fluidRow(lapply(1:num_movies_disaply, function(j) {
           list(box(width = 2,
-                   div(style = "text-align:center", img(src = paste0( "movieImages/", moviesDisplay$MovieID[(i - 1) * num_movies + j], ".jpg"), onerror="this.onerror=null;this.src='movieImages/existent-image.jpg';", height="60%", width="60%")),
-                   div(style = "text-align:center", paste0( moviesDisplay$title[(i - 1) * num_movies + j]) ),
-                   div(style = "text-align:center; font-size: 150%; color: #f0ad4e;", ratingInput(paste0("select_", moviesDisplay$MovieID[(i - 1) * num_movies + j]), label = "", dataStop = 5))))
+                   div(style = "text-align:center", img(src = paste0( "movieImages/", moviesDisplay$MovieID[(i - 1) * num_movies_disaply + j], ".jpg"), onerror="this.onerror=null;this.src='movieImages/existent-image.jpg';", height="60%", width="60%")),
+                   div(style = "text-align:center", paste0( moviesDisplay$title[(i - 1) * num_movies_disaply + j]) ),
+                   div(style = "text-align:center; font-size: 150%; color: #f0ad4e;", ratingInput(paste0("select_", moviesDisplay$MovieID[(i - 1) * num_movies_disaply + j]), label = "", dataStop = 5))))
         })))
       })
     })
@@ -272,7 +270,10 @@ server <- function(input, output){
         #useShinyjs()
         #jsCode <- "document.querySelector('[data-widget=collapse]').click();"
         #runjs(jsCode)
-        
+
+        num_rows = 4
+        num_movies = 6
+
         systemI_Algorithm = getSystemAlgorithm(input$input_SystemI_Algorithm)
 
         if (systemI_Algorithm == systemI_algorithm_list[1]){
@@ -281,14 +282,15 @@ server <- function(input, output){
           if (nrow(systemresult) < num_movies * num_rows){
              systemresult = subset(moviesList, grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE))
           }
-          systemresult = systemresult[sample(nrow(systemresult), ifelse(nrow(systemresult)>=numberofmovierecommend,numberofmovierecommend,nrow(systemresult))),]
-          
+
         } else {
           # Method 2:
           systemresult = subset(movies_clean, year >= trendyYear & (grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE)) )
-          systemresult = systemresult[sample(nrow(systemresult), ifelse(nrow(systemresult)>=numberofmovierecommend,numberofmovierecommend,nrow(systemresult))),]
+          if (nrow(systemresult) < numberofmovierecommend){
+            systemresult = subset(movies_clean, year >= trendyYear - 1 & (grepl(input$input_genre1, genres, fixed = TRUE) | grepl(input$input_genre2, genres, fixed = TRUE) | grepl(input$input_genre3, genres, fixed = TRUE)) )
+          }
         }
-
+        systemresult = systemresult[sample(nrow(systemresult), ifelse(nrow(systemresult)>=numberofmovierecommend,numberofmovierecommend,nrow(systemresult))),]
         outputToFile(systemresult, paste0("app1", toString(as.integer(Sys.time()))  ,".log"), isdebug)
         systemresult
        })
@@ -298,29 +300,31 @@ server <- function(input, output){
     
     # display the recommendations
     output$results_genre <- renderUI({
-      showNotification(paste0("System Message: Algorithm - ", getSystemAlgorithmDesc(getSetting(setting, systemI_AlgorithmKey))), duration = 5, type = "message" )
+      showNotification(paste0("System Message: System I Algorithm - ", getSystemAlgorithmDesc(getSetting(setting, systemI_AlgorithmKey))), duration = 5, type = "message" )
       
       recom_result1 <- df_system1()
-      systemI_num_movies = 6
-      systemI_num_rows = nrow(recom_result1) %/% systemI_num_movies
+      if (nrow(recom_result1) > 0){
+          systemI_num_movies = 6
+          systemI_num_movies = ifelse(nrow(recom_result1) >= systemI_num_movies, systemI_num_movies, nrow(recom_result1)) 
+          systemI_num_rows = nrow(recom_result1) %/% systemI_num_movies
 
-      
-      lapply(1:systemI_num_rows, function(i) {
-        list(fluidRow(lapply(1:systemI_num_movies, function(j) {
-          box(width = 2, status = "success", solidHeader = TRUE, title = paste0("Rank ", (i - 1) * num_movies + j),
-              
-              div(style = "text-align:center", img(src = paste0( "movieImages/", recom_result1$MovieID[(i - 1) * num_movies + j], ".jpg"), onerror="this.onerror=null;this.src='movieImages/existent-image.jpg';", height="60%", width="60%")),
-              div(style = "text-align:center; color: #999999; font-size: 80%", 
-                  paste0( recom_result1$title[(i - 1) * num_movies + j])
-              ),
-              div(style="text-align:center; font-size: 100%", 
-                  strong(paste0( recom_result1$title[(i - 1) * num_movies + j]))
-              )
-              
-          )        
-        }))) # columns
-      }) # rows
-      
+          lapply(1:systemI_num_rows, function(i) {
+            list(fluidRow(lapply(1:systemI_num_movies, function(j) {
+                box(width = 2, status = "success", solidHeader = TRUE, title = paste0("Rank ", (i - 1) * systemI_num_movies + j),
+                div(style = "text-align:center", img(src = paste0( "movieImages/", recom_result1$MovieID[(i - 1) * systemI_num_movies + j], ".jpg"), onerror="this.onerror=null;this.src='movieImages/existent-image.jpg';", height="60%", width="60%")),
+                div(style = "text-align:center; color: #999999; font-size: 80%", 
+                    paste0(recom_result1$title[(i - 1) * systemI_num_movies + j])
+                ),
+                div(style="text-align:center; font-size: 100%", 
+                    strong(paste0(recom_result1$title[(i - 1) * systemI_num_movies + j]))
+                )
+            )        
+          }))) # columns
+         }) # rows
+      }else{
+        showNotification("System Message: there is no movie found", duration = 5, type = "error")
+      }
+
     }) # renderUI function
     
     
@@ -335,7 +339,6 @@ server <- function(input, output){
         runjs(jsCode)
         
         # get the user's rating data
-        
         value_list <- reactiveValuesToList(input)
         user_ratings <- get_user_ratings(value_list, ratingsdata) 
         pred <- predict(model, newdata = user_ratings, n = numberofmovierecommend)
@@ -355,25 +358,32 @@ server <- function(input, output){
     
     # display the recommendations
     output$results <- renderUI({
-      showNotification(paste0("System Message: Algorithm - ",  getSystemAlgorithmDesc(getSetting(setting, systemII_AlgorithmKey)) ), duration = 5, type = "message" )
+      showNotification(paste0("System Message: System II Algorithm - ",  getSystemAlgorithmDesc(getSetting(setting, systemII_AlgorithmKey)) ), duration = 5, type = "message" )
       
+      num_rows = 4
+      num_movies = 6
+
       recom_result <- df_system2()
-      
-      lapply(1:num_rows, function(i) {
-        list(fluidRow(lapply(1:num_movies, function(j) {
-          box(width = 2, status = "success", solidHeader = TRUE, title = paste0("Rank ", (i - 1) * num_movies + j),
+      if (nrow(recom_result) > 0){
+         systemII_num_movies = ifelse(nrow(recom_result) >= num_movies, num_movies, nrow(recom_result)) 
+         systemII_num_rows = nrow(recom_result) %/% systemII_num_movies
+         
+         lapply(1:systemII_num_rows, function(i) {
+            list(fluidRow(lapply(1:systemII_num_movies, function(j) {
+             box(width = 2, status = "success", solidHeader = TRUE, title = paste0("Rank ", (i - 1) * num_movies + j),
               
-              div(style = "text-align:center", img(src = paste0( "movieImages/", recom_result$MovieID[(i - 1) * num_movies + j], ".jpg"), onerror="this.onerror=null;this.src='movieImages/existent-image.jpg';", height="60%", width="60%")),
-              div(style = "text-align:center; color: #999999; font-size: 80%", 
-                  paste0( recom_result$title[(i - 1) * num_movies + j])
-              ),
-              div(style="text-align:center; font-size: 100%", 
-                  strong(paste0( recom_result$title[(i - 1) * num_movies + j]))
-              )
+                div(style = "text-align:center", img(src = paste0( "movieImages/", recom_result$MovieID[(i - 1) * num_movies + j], ".jpg"), onerror="this.onerror=null;this.src='movieImages/existent-image.jpg';", height="60%", width="60%")),
+                div(style = "text-align:center; color: #999999; font-size: 80%", 
+                    paste0( recom_result$title[(i - 1) * num_movies + j])
+                ),
+                div(style="text-align:center; font-size: 100%", strong(paste0( recom_result$title[(i - 1) * num_movies + j])))
               
           )        
-        })))
-      })
+          })))
+        })
+      }else{
+        showNotification("System Message: there is no movie found", duration = 5, type = "error")
+      }
       
     })
 
