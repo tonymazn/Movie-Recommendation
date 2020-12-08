@@ -1,14 +1,22 @@
 ---
-title: "Project 4: Movie Recommendation"
-output: html_document
+title: "Project 4: Movie Recommendation Report by ZM11"
+author: Zhouning Ma (ZM11)
+date: '09/07/2020'
+output:
+  html_document: 
+    toc: yes
+  pdf_document: default
+urlcolor: cyan
+
+fontfamily: mathpazo
+fontfamilyoptions: sc, osf
+fontsize: 11pt
+linkcolor: blue
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+***
 
 
-## data: https://grouplens.org/datasets/movielens/
 
 ```{r include=FALSE}
 start_time <- Sys.time()
@@ -19,17 +27,21 @@ library(data.table)
 library(reshape2)
 ```
 
-```{r}
-#movies <- read.cthsv("data/ml-latest-small/movies.csv",stringsAsFactors=FALSE)
-#ratings <- read.csv("data/ml-latest-small/ratings.csv")
-#links <- read.csv("..\data\ml-latest-small\links.csv")
-#tags <- read.csv("..\data\ml-latest-small\tags.csv")
+
+### Project Overview:
+In this project, we develop content based recommendation system(System I) and collaborative recommendation system(System II).
+
+* **System I:** recommendation based on genres. We know user's favorite genre, we provide two recommendation schemes: 
+   + __Method I:__  highly-rate movies - select the 4-point or more review
+   + __Method II:__ most trendy movies - the newest movie(here is year 2000)
+
+* **System II:** collaborative recommendation system. we provided three collaborative recommendation algorithms: 
+   + __User-based (UBCF):__ we assume that similar users will have similar taste. UBCF uses the logic and recommends items by finding similar users to the user;
+   + __Item-based (IBCF):__ The similarities between different items in the dataset are calculated by using one of a number of similarity measures, and then these similarity values are used to predict;
+   + __Singular value decomposition (SVD):__ It uses a matrix structure where each row represents a user, and each column represents an item. The elements of this matrix are the ratings that are given to items by users.
 
 
-```
-
-
-```{r}
+```{r include=FALSE}
 read <- function(fileName, separators) {
     data <- readLines(con <- file(fileName))
     close(con)
@@ -44,7 +56,6 @@ basedir ="data/test/"
 movies = read(paste0(basedir,"movies.dat"), "::")
 ratings = read(paste0(basedir,"ratings.dat"), "::")
 users = read(paste0(basedir, "users.dat"), "::")
-#users = users[, -c(2,4,6,8)] # skip columns
 colnames(movies) = c('MovieID', 'title', 'genres')
 colnames(ratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
 colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
@@ -52,14 +63,39 @@ colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
 ```
 
 
-```{r}
-nrow(movies)
-nrow(ratings)
-nrow(users)
+### Dataset: 
+The dataset contains about 1 million ratings and the details as following:
 
-```
+* Number of movies: $`r nrow(movies)`$
+* Number of ratings: $`r nrow(ratings)`$
+* Number of users: $`r nrow(users)`$
 
-```{r}
+The dataset README(3) shows:
+Genres are pipe-separated and are selected from the following genres:
+
+* Action
+* Adventure
+* Animation
+* Children's
+* Comedy
+* Crime
+* Documentary
+* Drama
+* Fantasy
+* Film-Noir
+- Horror
+- Musical
+- Mystery
+- Romance
+- Sci-Fi
+- Thriller
+- War
+- Western
+	
+
+
+
+```{r include=FALSE}
 
 ## Data pre-processing
 genres <- as.data.frame(movies[,3], stringsAsFactors=FALSE)
@@ -72,8 +108,7 @@ genre_list <- c("Action", "Adventure", "Animation", "Children",
                 "Sci-Fi", "Thriller", "War", "Western")
 
 
-
-genre_matrix <- matrix(0,nrow(movies) + 1,18) #empty matrix, 10330=no of movies+1, 18=no of genres
+genre_matrix <- matrix(0,nrow(movies) + 1,18) #empty matrix, 18=no of genres
 genre_matrix[1,] <- genre_list #set first row to genre list
 colnames(genre_matrix) <- genre_list #set column names to genre list
 
@@ -91,49 +126,26 @@ for (c in 1:ncol(genre_matrix2)) {
   genre_matrix2[,c] <- as.integer(genre_matrix2[,c])
 } 
 
-
 #Create a matrix to search for a movie by genre:
 years <- as.data.frame(movies$title, stringsAsFactors=FALSE)
-head(movies$title,12)
 
-
-library(data.table)
 substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 
-
-
 years <- as.data.frame(substr(substrRight(substrRight(years$`movies$title`, 6),5),1,4))
-#years <- as.data.frame(substr(substrRight(years$`movies$title`, 5),1,4))
-#years
+colMin <- function(data) sapply(data, min, na.rm = TRUE)
+colMax <- function(data) sapply(data, max, na.rm = TRUE)
 
-length(movies[,1])
-length(substr(movies[,2],1,nchar(movies[,2])-6))
-length(years)
-length(genre_matrix2)
-
-search_matrix <- cbind(movies[,1], substr(movies[,2],1,nchar(movies[,2])-6), years, genre_matrix2)
-
-colnames(search_matrix) <- c("MovieID", "title", "year", genre_list)
-
-
-write.csv(search_matrix, "search.csv")
-search_matrix <- read.csv("search.csv", stringsAsFactors=FALSE)
-
-# Example of search an Action movie produced in 1995:
-subset(search_matrix, Action == 1 & year == 1995)$title
-
-
+min_year = colMin(years)
+max_year = colMax(years)
 
 ```
 
+The movies' year are between $`r min_year`$ to $`r max_year`$.
 
 
-
-
-
-```{r}
+```{r include=FALSE}
 ## Create a user profile
 binaryratings <- ratings
 
@@ -153,14 +165,14 @@ for (i in 1:nrow(binaryratings)){
 
 # convert binaryratings matrix to the correct format:
 binaryratings2 <- dcast(binaryratings, MovieID~UserID, value.var = "Rating", na.rm=FALSE)
-head(binaryratings2)
+#head(binaryratings2)
 
 
 for (i in 1:ncol(binaryratings2)){
   binaryratings2[which(is.na(binaryratings2[,i]) == TRUE),i] <- 0
 }
 binaryratings2 = binaryratings2[,-1] #remove MovieIDs col. Rows are MovieIDs, cols are userIds
-head(binaryratings2)
+#head(binaryratings2)
 
 
 #Remove rows that are not rated from movies dataset
@@ -172,10 +184,8 @@ rownames(movies2) <- NULL
 #Remove rows that are not rated from genre_matrix2
 genre_matrix3 <- genre_matrix2[-which((movies$MovieID %in% ratings$MovieID) == FALSE),]
 rownames(genre_matrix3) <- NULL
-head(genre_matrix3, 10)
 
 #Calculate dot product for User Profiles
-#result = matrix(0,18,668) # here, 668=no of users/raters, 18=no of genres
 result = matrix(0,18,nrow(users)) 
 for (c in 1:ncol(binaryratings2)){
   for (i in 1:ncol(genre_matrix3)){
@@ -194,15 +204,7 @@ for (c in 1:ncol(result)){
     }
   }
 }
-#head(result)
 
-
-
-```
-
-
-
-```{r}
 ## Assume that users like similar items, and retrieve movies 
 # that are closest in similarity to a user's profile, which 
 # represents a user's preference for an item's feature.
@@ -210,7 +212,6 @@ for (c in 1:ncol(result)){
 
 # The User-Based Collaborative Filtering Approach
 
-library(reshape2)
 #Create ratings matrix. Rows = userId, Columns = movieId
 ratingmat <- dcast(ratings, UserID~MovieID, value.var = "Rating", na.rm=FALSE)
 ratingmat <- as.matrix(ratingmat[,-1]) #remove userIds
@@ -219,7 +220,6 @@ ratingmat <- as.matrix(ratingmat[,-1]) #remove userIds
 # Similarity Calculation Method: Cosine Similarity
 # Nearest Neighbors: 30
 
-library(recommenderlab)
 #Convert rating matrix into a recommenderlab sparse matrix
 ratingmat <- as(ratingmat, "realRatingMatrix")
 
@@ -229,14 +229,45 @@ similarity_users <- similarity(ratingmat[1:4, ],
                                method = "cosine", 
                                which = "users")
 as.matrix(similarity_users)
+
+```
+
+
+
+
+
+
+### Exploring Similarity Data
+
+```{r echo=TRUE}
+
 image(as.matrix(similarity_users), main = "User similarity")
+
+```
+
+
+```{r include=FALSE}
+
 
 # compute similarity between
 # the first four movies
 similarity_items <- similarity(ratingmat[, 1:4], method =
                                  "cosine", which = "items")
 as.matrix(similarity_items)
+
+```
+
+
+```{r echo=TRUE}
+
 image(as.matrix(similarity_items), main = "Item similarity")
+
+```
+
+
+### Most Viewed Movies Visualization (5): 
+
+```{r include=FALSE}
 
 # Exploring values of ratings:
 vector_ratings <- as.vector(ratingmat@data)
@@ -245,6 +276,11 @@ unique(vector_ratings) # what are unique values of ratings
 table_ratings <- table(vector_ratings) # what is the count of each rating value
 table_ratings
 
+
+```
+
+
+```{r echo=TRUE}
 # Visualize the rating:
 vector_ratings <- vector_ratings[vector_ratings != 0] # rating == 0 are NA values
 vector_ratings <- factor(vector_ratings)
@@ -252,18 +288,29 @@ vector_ratings <- factor(vector_ratings)
 qplot(vector_ratings) + 
   ggtitle("Distribution of the ratings")
 
+```
+
+
+```{r echo=TRUE}
+
+
 # Exploring viewings of movies:
 views_per_movie <- colCounts(ratingmat) # count views for each movie
+table_views <- data.frame(movie = names(views_per_movie), views = views_per_movie) # create dataframe of views
+table_views <- table_views[order(table_views$views, decreasing = TRUE), ] # sort by number of views
 
-table_views <- data.frame(movie = names(views_per_movie),
-                          views = views_per_movie) # create dataframe of views
-table_views <- table_views[order(table_views$views, 
-                                 decreasing = TRUE), ] # sort by number of views
+
+```
+
+
+```{r echo=TRUE}
+
+#head(movies2)
 
 ggplot(table_views[1:6, ], aes(x = movie, y = views)) +
   geom_bar(stat="identity") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
-  scale_x_discrete(labels=subset(movies2, movies2$movieId == table_views$movie)$title) +
+  scale_x_discrete(labels=subset(movies2, movies2$MovieID == table_views$movie)$title) +
   ggtitle("Number of views of the top movies")
 
 #Visualizing the matrix:
@@ -280,56 +327,299 @@ image(ratingmat_norm[rowCounts(ratingmat_norm) > quantile(rowCounts(ratingmat_no
                 colCounts(ratingmat_norm) > quantile(colCounts(ratingmat_norm), 0.99)], 
       main = "Heatmap of the top users and movies")
 
-#Create UBFC Recommender Model. UBCF stands for User-Based Collaborative Filtering
-recommender_model <- Recommender(ratingmat_norm, 
-                                 method = "UBCF", 
-                                 param=list(method="Cosine",nn=30))
 
-model_details <- getModel(recommender_model)
-model_details$data
 
-recom <- predict(recommender_model, 
-                 ratingmat[1], 
-                 n=10) #Obtain top 10 recommendations for 1st user in dataset
+```
 
-recom
 
-#recc_matrix <- sapply(recom@items, 
-#                      function(x){ colnames(ratingmat)[x] })
-#dim(recc_matrix)
+## Create realRatingMatrix
 
-recom_list <- as(recom, 
-                 "list") #convert recommenderlab object to readable list
+```{r}
+ratings <- as(ratings, 'realRatingMatrix')
+```
 
-#Obtain recommendations
-recom_result <- matrix(0,10)
-for (i in 1:10){
-  
-  
-  recom_result[i] <- as.character(subset(movies, 
-                                         movies$MovieID == as.integer(recom_list[[1]][i]))$title)
-}
 
-head(recom_result)
+## Training and Testing Data
+We split the data into 80% training and 20% testing. 
+
+```{r}
+train_proportion <- .8
+nb_of_given_ratings_per_test_user <- 10
+
+# split the data into the training and the test set:
+e <- evaluationScheme(ratings, method="split", train=train_proportion, given=15, goodRating=0)
+e
+
+```
+
+
+## We will train **User-based** & **Item-based** Collaborative Filtering models by difference parameters (7,8):
+
+- normalize: NULL, center or Z-score;
+
+- method: Cosine, Euclidean pearson
+
+also, we will train two SVD models with difference parameter, total **20 models:**, we will calculate prediction accuracy as well, the following are the examples:
+
+** User-Based Collaborative Filtering: Cosine Similarity
+
+   + UBCF_N_C : The raw data is used with no normalization applied;
+
+   + UBCF_C_C: Data are normalized using centering.
+
+   + UBCF_Z_C: Z-score normalization is applied to the data;
+
+```{r}
+# train UBCF cosine similarity models
+# non-normalized
+UBCF_N_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = NULL, method="Cosine"))
+
+# centered
+UBCF_C_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "center",method="Cosine"))
+
+# Z-score normalization
+UBCF_Z_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-score",method="Cosine"))
+
+```
+
+### To evaluate the models we again make use of an approach suggested in the CRAN vignette for the recommenderlab package:
+
+```{r}
+# compute predicted ratings
+p1 <- predict(UBCF_N_C, getData(e, "known"), type="ratings")
+p2 <- predict(UBCF_C_C, getData(e, "known"), type="ratings")
+p3 <- predict(UBCF_Z_C, getData(e, "known"), type="ratings")
+
+# aggregate the performance statistics
+error_UCOS <- rbind(
+  UBCF_N_C = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  UBCF_C_C = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  UBCF_Z_C = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_UCOS)
+```
+
+
+### User-Based Collaborative Filtering: Euclidean Distance
+
+```{r}
+# train UBCF Euclidean Distance models
+
+# non-normalized
+UBCF_N_E <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = NULL, method="Euclidean"))
+
+# centered
+UBCF_C_E <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "center",method="Euclidean"))
+
+# Z-score normalization
+UBCF_Z_E <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-score",method="Euclidean"))
 
 ```
 
 
 ```{r}
-# Evaluation:
-#evaluation_scheme <- evaluationScheme(ratingmat, 
-#                                      method="cross-validation", 
-#                                      k=5, given=3, 
-#                                      goodRating=5) #k=5 meaning a 5-fold cross validation. given=3 meaning a Given-3 protocol
-#evaluation_results <- evaluate(evaluation_scheme, 
-#                               method="UBCF", 
-#                               n=c(1,3,5,10,15,20))
-#eval_results <- getConfusionMatrix(evaluation_results)[[1]]
+# compute predicted ratings
+p1 <- predict(UBCF_N_E, getData(e, "known"), type="ratings")
+p2 <- predict(UBCF_C_E, getData(e, "known"), type="ratings")
+p3 <- predict(UBCF_Z_E, getData(e, "known"), type="ratings")
 
+# aggregate the performance statistics
+error_UEUC <- rbind(
+  UBCF_N_E = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  UBCF_C_E = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  UBCF_Z_E = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_UEUC)
+```
+
+** User-Based Collaborative Filtering: Pearson Correlation
+```{r}
+#train UBCF pearson correlation models
+
+# non-normalized
+UBCF_N_P <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = NULL, method="pearson"))
+
+# centered
+UBCF_C_P <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "center",method="pearson"))
+
+# Z-score normalization
+UBCF_Z_P <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-score",method="pearson"))
 
 ```
 
 
+```{r}
+# compute predicted ratings
+p1 <- predict(UBCF_N_P, getData(e, "known"), type="ratings")
+p2 <- predict(UBCF_C_P, getData(e, "known"), type="ratings")
+p3 <- predict(UBCF_Z_P, getData(e, "known"), type="ratings")
+
+# aggregate the performance statistics
+error_UPC <- rbind(
+  UBCF_N_P = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  UBCF_C_P = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  UBCF_Z_P = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_UPC)
+```
+
+
+### Item-Based Collaborative Filtering: Cosine Similarity
+```{r}
+#train IBCF cosine similarity models
+
+# non-normalized
+IBCF_N_C <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = NULL, method="Cosine"))
+
+# centered
+IBCF_C_C <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "center",method="Cosine"))
+
+# Z-score normalization
+IBCF_Z_C <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "Z-score",method="Cosine"))
+
+```
+
+
+```{r}
+# compute predicted ratings
+p1 <- predict(IBCF_N_C, getData(e, "known"), type="ratings")
+p2 <- predict(IBCF_C_C, getData(e, "known"), type="ratings")
+p3 <- predict(IBCF_Z_C, getData(e, "known"), type="ratings")
+
+
+# aggregate the performance statistics
+error_ICOS <- rbind(
+  IBCF_N_C = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  IBCF_C_C = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  IBCF_Z_C = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+
+kable(error_ICOS)
+
+```
+
+** Item-Based Collaborative Filtering: Euclidean Distance
+```{r}
+#train IBCF Euclidean Distance models
+
+# non-normalized
+IBCF_N_E <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = NULL, method="Euclidean"))
+
+# centered
+IBCF_C_E <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "center",method="Euclidean"))
+
+# Z-score normalization
+IBCF_Z_E <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "Z-score",method="Euclidean"))
+```
+
+```{r}
+# compute predicted ratings
+p1 <- predict(IBCF_N_E, getData(e, "known"), type="ratings")
+p2 <- predict(IBCF_C_E, getData(e, "known"), type="ratings")
+p3 <- predict(IBCF_Z_E, getData(e, "known"), type="ratings")
+
+
+# aggregate the performance statistics
+error_IEUC <- rbind(
+  IBCF_N_E = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  IBCF_C_E = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  IBCF_Z_E = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_IEUC)
+```
+
+
+### Item-Based Collaborative Filtering: Pearson Correlation
+```{r}
+#train IBCF pearson correlation models
+
+# non-normalized
+IBCF_N_P <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = NULL, method="pearson"))
+
+# centered
+IBCF_C_P <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "center",method="pearson"))
+
+# Z-score normalization
+IBCF_Z_P <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "Z-score",method="pearson"))
+
+```
+
+
+```{r}
+# compute predicted ratings
+p1 <- predict(IBCF_N_P, getData(e, "known"), type="ratings")
+p2 <- predict(IBCF_C_P, getData(e, "known"), type="ratings")
+p3 <- predict(IBCF_Z_P, getData(e, "known"), type="ratings")
+
+# aggregate the performance statistics
+error_IPC <- rbind(
+  IBCF_N_P = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  IBCF_C_P = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  IBCF_Z_P = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_IPC)
+
+```
+
+
+## Antoher two SVD models
+```{r}
+recommenderRegistry$get_entry('SVD', dataType='realRatingMatrix')
+```
+
+```{r}
+# Latent-Factor Collaborative Filtering Recommender
+# with matrix factorization by Singular-Value Decomposition (SVD)
+ latent_factor_cofi_rec_SVD <- Recommender(
+   data=ratings_train,
+   method='SVD',            # Item-Based Collaborative Filtering
+   parameter=list(
+     categories=30,         # number of latent factors
+     normalize='center',    # normalizing by subtracting average rating per user;
+                            # note that we don't scale by standard deviations here;
+                            # we are assuming people rate on the same scale but have
+                            # different biases
+     method='Pearson'       # use Pearson correlation
+   ))
+
+
+ model_svd <- Recommender(data = ratings_train, method = "SVD")
+```
+
+
+
+```{r}
+# compute predicted ratings
+p1 <- predict(latent_factor_cofi_rec_SVD, getData(e, "known"), type="ratings")
+p2 <- predict(model_svd, getData(e, "known"), type="ratings")
+
+# aggregate the performance statistics
+error_SVD <- rbind(
+  latent_factor_cofi_rec_SVD = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  SVD_C_P = calcPredictionAccuracy(p2, getData(e, "unknown")),
+)
+kable(error_IPC)
+
+```
+
+
+
+```{r}
+# memory cleanup
+rm(IBCF_N_P, IBCF_C_P, IBCF_Z_P)
+```
+
+```{r}
+c_res <- data.frame(rbind(error_UCOS, error_UEUC, error_UPC, error_ICOS, error_IEUC, error_IPC, error_SVD))
+c_res <- c_res[order(c_res$RMSE ),]
+kable(c_res)
+```
+
+
+```{r}
+# las = 3: rotate x axis labels to perendicular; las = 1: rotate y axis labels
+barplot(c_res$RMSE, col = "yellow", main = "Barplot of Model RMSE's", las = 2, ylab = "RMSE", horiz = FALSE, names.arg = rownames(c_res), cex.names=.8)
+```
 
 
 
@@ -339,3 +629,12 @@ head(recom_result)
 Sys.time() - start_time
 ```
 
+## Reference: 
+1. Piazza:  https://piazza.com/class/kdf6l5f8bb78j?cid=868
+2. Moviewlens: https://grouplens.org/datasets/movielens/
+3. Dataset README: https://github.com/tonymazn/stat542/tree/main/data/README
+4. Machine Learning Project – Data Science Movie Recommendation System Project in R https://data-flair.training/blogs/data-science-r-movie-recommendation/
+5. Movie Recommendation System: https://jeknov.shinyapps.io/movieRec/
+6. Item-Based Collaborative Filtering Recommendation: https://www.kaggle.com/hendraherviawan/itembased-collaborative-filter-recommendation-r
+7. User-Based and Item-Based Collaborative Filtering https://rpubs.com/jt_rpubs/285729
+8. Movie Recommendation System  https://jeknov.shinyapps.io/movieRec/
