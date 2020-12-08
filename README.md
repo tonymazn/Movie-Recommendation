@@ -26,9 +26,38 @@ System Structure
     │   │     ├── movies_clean.dat                  # remove the movies without rating record
     │   │     ├── ratings.dat                       # Movielens 1M dataset ratings
     │   │     └── users.dat                         # Movielens 1M dataset users.dat
+    │   │
     │   ├── functions                               # utility folder
+    │   │     ├── helpers.R                         # UI helpers
+    │   │     └── setting.R                         # setting untility
+    │   │
     │   ├── model                                   # pretrain models
-    │   ├── www                                     # css and images folder
+    │   │     ├── IBCF_C_C_model.rds                # pretrain model IBCF normalize = "center",method="Cosine"
+    │   │     ├── IBCF_C_E_model.rds                # pretrain model IBCF normalize = "center",method="Euclidean"
+    │   │     ├── IBCF_C_P_model.rds                # pretrain model IBCF normalize = "center",method="pearson"
+    │   │     ├── IBCF_N_C_model.rds                # pretrain model IBCF normalize = NULL, method="Cosine"
+    │   │     ├── IBCF_N_E_model.rds                # pretrain model IBCF normalize = NULL, method="Euclidean"
+    │   │     ├── IBCF_N_P_model.rds                # pretrain model IBCF normalize = NULL, method="pearson"
+    │   │     ├── IBCF_Z_C_model.rds                # pretrain model IBCF normalize = "Z-score",method="Cosine"
+    │   │     ├── IBCF_Z_E_model.rds                # pretrain model IBCF normalize = "Z-score",method="Euclidean"
+    │   │     ├── IBCF_Z_P_model.rds                # pretrain model IBCF normalize = "Z-score",method="pearson"
+    │   │     ├── UBCF_C_C_model.rds                # pretrain model UBCF normalize = "center",method="Cosine"
+    │   │     ├── UBCF_C_E_model.rds                # pretrain model UBCF normalize = "center",method="Euclidean"
+    │   │     ├── UBCF_C_P_model.rds                # pretrain model UBCF normalize = "center",method="pearson"
+    │   │     ├── UBCF_N_C_model.rds                # pretrain model UBCF normalize = NULL, method="Cosine"
+    │   │     ├── UBCF_N_E_model.rds                # pretrain model UBCF normalize = NULL, method="Euclidean"
+    │   │     ├── UBCF_N_P_model.rds                # pretrain model UBCF normalize = NULL, method="pearson"
+    │   │     ├── UBCF_Z_C_model.rds                # pretrain model UBCF normalize = "Z-score",method="Cosine"
+    │   │     ├── UBCF_Z_E_model.rds                # pretrain model UBCF normalize = "Z-score",method="Euclidean"
+    │   │     ├── UBCF_Z_P_model.rds                # pretrain model UBCF normalize = "Z-score",method="pearson"
+    │   │     ├── latent_factor_cofi_rec_SVD...rds  # SVD categories=30,normalize='center',method='Pearson'
+    │   │     └── svd_model.rds                     # SVD default parameter
+    │   │
+    │   ├── www                                     # 
+    │   │     ├── css                               # css folder
+    │   │     ├── movieImages                       # movie images folder
+    │   │     └── ajax-loader-bar.gif               # ajax called to display
+    │   │
     │   ├── app.R                                   # Shiny app
     │   ├── run.bat                                 # windows run template
     │   └── setting.txt                             # site setting
