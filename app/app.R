@@ -115,7 +115,7 @@ getSystemAlgorithmDesc = function(code){
 
 ui <- dashboardPage(
 
-  dashboardHeader(title="Movie Recommend"),
+  dashboardHeader(title="Top Movies"),
   dashboardSidebar(
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "css/movies.css")

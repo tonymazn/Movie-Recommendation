@@ -1,5 +1,5 @@
 ---
-title: "Project 4: Movie Recommendation Report by ZM11"
+title: "Project 4: Movie Recommendation Report"
 author: Zhouning Ma (ZM11)
 date: '09/07/2020'
 output:
@@ -29,7 +29,7 @@ library(knitr)
 ```
 
 
-### Project Overview:
+### Project Overview
 In this project, we develop content based recommendation system(System I) and collaborative recommendation system(System II) (1).
 
 * **System I:** recommendation based on genres. We know user's favorite genre, we provide two recommendation schemes: 
@@ -54,6 +54,7 @@ read <- function(fileName, separators) {
 
 
 basedir ="data/test/"
+#basedir ="data/"
 movies = read(paste0(basedir,"movies.dat"), "::")
 ratings = read(paste0(basedir,"ratings.dat"), "::")
 users = read(paste0(basedir, "users.dat"), "::")
@@ -61,10 +62,19 @@ colnames(movies) = c('MovieID', 'title', 'genres')
 colnames(ratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
 colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
 
+moviesList <- read(paste0(basedir,"aggr.dat"), "::")
+movies_clean <- read(paste0(basedir,"movies_clean.dat"), "::")
+
+colnames(moviesList) = c( 'MovieID', 'AveRating', 'title', 'genres')
+colnames(movies_clean) = c("MovieID", "title", "year", 'genres')
+genre_list <- c("Action", "Adventure", "Animation", "Children", 
+                "Comedy", "Crime","Documentary", "Drama", "Fantasy",
+                "Film-Noir", "Horror", "Musical", "Mystery","Romance",
+                "Sci-Fi", "Thriller", "War", "Western")
 ```
 
 
-### Dataset: 
+### Dataset
 The dataset(2) contains about 1 million ratings and the details as following:
 
 * Number of movies: $`r nrow(movies)`$
@@ -266,7 +276,7 @@ image(as.matrix(similarity_items), main = "Item similarity")
 ```
 
 
-### Most Viewed Movies Visualization (4)(5): 
+### Most Viewed Movies Visualization (4)(5) 
 
 ```{r include=FALSE}
 
@@ -292,7 +302,7 @@ qplot(vector_ratings) +
 ```
 
 
-```{r echo=TRUE}
+```{r include=FALSE}
 
 
 # Exploring viewings of movies:
@@ -301,18 +311,17 @@ table_views <- data.frame(movie = names(views_per_movie), views = views_per_movi
 table_views <- table_views[order(table_views$views, decreasing = TRUE), ] # sort by number of views
 
 
+#ggplot(table_views[1:6, ], aes(x = movie, y = views)) +
+#  geom_bar(stat="identity") + 
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+#  scale_x_discrete(labels=subset(movies2, movies2$MovieID == table_views$movie)$title) +
+#  ggtitle("Number of views of the top movies")
+
 ```
 
 
 ```{r echo=TRUE}
 
-#head(movies2)
-
-ggplot(table_views[1:6, ], aes(x = movie, y = views)) +
-  geom_bar(stat="identity") + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
-  scale_x_discrete(labels=subset(movies2, movies2$MovieID == table_views$movie)$title) +
-  ggtitle("Number of views of the top movies")
 
 #Visualizing the matrix:
 image(ratingmat, main = "Heatmap of the rating matrix") # hard to read-too many dimensions
@@ -352,6 +361,61 @@ threshold <- 0 ## ratings above 0 as the cutoff point
 e <- evaluationScheme(ratings, method="split", train=train_proportion, k=10, given=to_keep, goodRating=threshold)
 e
 
+```
+
+
+## System I
+
+system I is content based recommendation system, let's say we know the user's favorite genres, we will recommend movies based on genres. 
+
+### Method I: highly-rate movies
+
+  We calculate the average point of each movie and randomly pick N movies which average point is great than 3-point(4-point or 5-point) in the genres. 
+
+
+```{r}
+  # Method 1:
+  numberofmovierecommend = 5
+
+  input_genre1 = genre_list[1]
+  input_genre2 = genre_list[2]
+  input_genre3 = genre_list[3]
+
+  systemresult = subset(moviesList,AveRating>=4 & (grepl(input_genre1, genres, fixed = TRUE) | grepl(input_genre2, genres, fixed = TRUE) | grepl(input_genre3, genres, fixed = TRUE)) )
+  if (nrow(systemresult) < numberofmovierecommend){
+     systemresult = subset(moviesList, grepl(input_genre1, genres, fixed = TRUE) | grepl(input_genre2, genres, fixed = TRUE) | grepl(input_genre3, genres, fixed = TRUE))
+  }
+
+  systemresult = systemresult[sample(nrow(systemresult), ifelse(nrow(systemresult)>=numberofmovierecommend,numberofmovierecommend,nrow(systemresult))),]
+  systemresult
+
+
+```
+  
+  
+  
+### Method II:most trendy movies
+
+  The newest movies are year 2000 in the dataset, we will randomly pick N movies from year 2000 in the genres, Unfortunately sometimes there are not enough movies
+  in year 2000 for each genres, for example, it is empty in genres "Film-Noir" of year 2000, we have to try the movies of year 1999.
+  
+
+```{r}
+  # Method 2:
+  numberofmovierecommend = 5
+  trendyYear = 2000
+
+  input_genre1 = genre_list[1]
+  input_genre2 = genre_list[2]
+  input_genre3 = genre_list[3]
+
+
+  systemresult = subset(movies_clean, year >= trendyYear & (grepl(input_genre1, genres, fixed = TRUE) | grepl(input_genre2, genres, fixed = TRUE) | grepl(input_genre3, genres, fixed = TRUE)) )
+  if (nrow(systemresult) < numberofmovierecommend){
+      systemresult = subset(movies_clean, year >= trendyYear - 1 & (grepl(input_genre1, genres, fixed = TRUE) | grepl(input_genre2, genres, fixed = TRUE) | grepl(input_genre3, genres, fixed = TRUE)) )
+  }
+  systemresult = systemresult[sample(nrow(systemresult), ifelse(nrow(systemresult)>=numberofmovierecommend,numberofmovierecommend,nrow(systemresult))),]
+  systemresult
 ```
 
 
@@ -623,12 +687,51 @@ barplot(c_res$RMSE, col = "yellow", main = "Model RMSEs", las = 2, ylab = "RMSE"
 
 
 
+## Evaluation result
+It looks like the SVDs' performance(prediction accuracy) are better than User-based and Item-based Collaborative Filtering. 
+
+
+## Save pre-trained models
+It takes time to train a model with large data, to save time for the App, we will store the model object to  .rds format, when the system starts, 
+it will load the .rds to the model object. it will be very fast. We save all the models we tested, it is around 20 models.
+
+## Movie Recommendation App
+
+  * it is a shiny app with System I and System II algorithms
+  * System I
+    + the app needs to take the input from users on their favorite genres, and display the result
+    + system will provide two methods for System I (you are able to select any of them by the setting)
+  
+ * System II 
+   + the app need the users to rate many movies as possible;
+   + system will discover movies for the users by User-based or Item-based Collaborative Filtering models or SVD models
+
+ * Setting
+   + select the algorithm for System I
+   + select the algorithm for System II
+
+
+## Deploy the App
+it is a huge challenge to deploy to Shiny server, it doesn't support the dataset like us(1M rows), but we found a way finally to make it successfully, 
+we are able to running the App on the full dataset, but it is not for production, it is ok for the proof of concept. We found it is stable when we work
+RStudio on windows environment, why don't we use this one to demonstrate? Once we are able to change the web server port to 80, then we are able to host.
+We run the following code on RStudio console:
+
+**runApp('app', host = "0.0.0.0", port = 80)**
+
+
+anther thing we need to do is the server will shutdown in 1 hour, we need to ping(wget can do this job) it every 10 minutes.
+
+
+
+
+
 
 ```{r}
 Sys.time() - start_time
 ```
 
-## Reference: 
+## Reference 
 1. Piazza:  https://piazza.com/class/kdf6l5f8bb78j?cid=868
 2. Moviewlens: https://grouplens.org/datasets/movielens/
 3. Dataset README: https://github.com/tonymazn/stat542/tree/main/data/README
