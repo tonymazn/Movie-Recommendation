@@ -1,4 +1,4 @@
-STAT542 Project 4 - Movie Recommendation
+#STAT542 Project 4 - Movie Recommendation
 -
 In this project, we develop content based recommendation system(System I) and collaborative recommendation system(System II) (1).
 
