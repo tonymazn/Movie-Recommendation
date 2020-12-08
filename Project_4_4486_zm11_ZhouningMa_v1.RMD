@@ -25,11 +25,12 @@ library(recommenderlab)
 library(ggplot2)
 library(data.table)
 library(reshape2)
+library(knitr)
 ```
 
 
 ### Project Overview:
-In this project, we develop content based recommendation system(System I) and collaborative recommendation system(System II).
+In this project, we develop content based recommendation system(System I) and collaborative recommendation system(System II) (1).
 
 * **System I:** recommendation based on genres. We know user's favorite genre, we provide two recommendation schemes: 
    + __Method I:__  highly-rate movies - select the 4-point or more review
@@ -64,7 +65,7 @@ colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
 
 
 ### Dataset: 
-The dataset contains about 1 million ratings and the details as following:
+The dataset(2) contains about 1 million ratings and the details as following:
 
 * Number of movies: $`r nrow(movies)`$
 * Number of ratings: $`r nrow(ratings)`$
@@ -265,7 +266,7 @@ image(as.matrix(similarity_items), main = "Item similarity")
 ```
 
 
-### Most Viewed Movies Visualization (5): 
+### Most Viewed Movies Visualization (4)(5): 
 
 ```{r include=FALSE}
 
@@ -343,17 +344,20 @@ ratings <- as(ratings, 'realRatingMatrix')
 We split the data into 80% training and 20% testing. 
 
 ```{r}
-train_proportion <- .8
-nb_of_given_ratings_per_test_user <- 10
+train_proportion <- 0.8
+to_keep <- 15  ## given 15 items
+threshold <- 0 ## ratings above 0 as the cutoff point
 
 # split the data into the training and the test set:
-e <- evaluationScheme(ratings, method="split", train=train_proportion, given=15, goodRating=0)
+e <- evaluationScheme(ratings, method="split", train=train_proportion, k=10, given=to_keep, goodRating=threshold)
 e
 
 ```
 
 
-## We will train **User-based** & **Item-based** Collaborative Filtering models by difference parameters (7,8):
+## Train User-based and Item-based Collaborative Filtering models
+
+We will train CF models by difference parameters (7,8):
 
 - normalize: NULL, center or Z-score;
 
@@ -361,7 +365,8 @@ e
 
 also, we will train two SVD models with difference parameter, total **20 models:**, we will calculate prediction accuracy as well, the following are the examples:
 
-** User-Based Collaborative Filtering: Cosine Similarity
+
+### User-Based Collaborative Filtering: Cosine Similarity
 
    + UBCF_N_C : The raw data is used with no normalization applied;
 
@@ -382,7 +387,7 @@ UBCF_Z_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-s
 
 ```
 
-### To evaluate the models we again make use of an approach suggested in the CRAN vignette for the recommenderlab package:
+### Evaluate the models:
 
 ```{r}
 # compute predicted ratings
@@ -417,6 +422,7 @@ UBCF_Z_E <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-s
 ```
 
 
+
 ```{r}
 # compute predicted ratings
 p1 <- predict(UBCF_N_E, getData(e, "known"), type="ratings")
@@ -432,7 +438,8 @@ error_UEUC <- rbind(
 kable(error_UEUC)
 ```
 
-** User-Based Collaborative Filtering: Pearson Correlation
+### User-Based Collaborative Filtering: Pearson Correlation
+
 ```{r}
 #train UBCF pearson correlation models
 
@@ -465,6 +472,7 @@ kable(error_UPC)
 
 
 ### Item-Based Collaborative Filtering: Cosine Similarity
+
 ```{r}
 #train IBCF cosine similarity models
 
@@ -498,7 +506,8 @@ kable(error_ICOS)
 
 ```
 
-** Item-Based Collaborative Filtering: Euclidean Distance
+### Item-Based Collaborative Filtering: Euclidean Distance
+
 ```{r}
 #train IBCF Euclidean Distance models
 
@@ -530,6 +539,7 @@ kable(error_IEUC)
 
 
 ### Item-Based Collaborative Filtering: Pearson Correlation
+
 ```{r}
 #train IBCF pearson correlation models
 
@@ -562,45 +572,35 @@ kable(error_IPC)
 ```
 
 
-## Antoher two SVD models
-```{r}
-recommenderRegistry$get_entry('SVD', dataType='realRatingMatrix')
-```
+## SVD models
+
+- One is Latent-Factor Collaborative Filtering Recommender
+- SVD with default parameter, we call it no-para
 
 ```{r}
-# Latent-Factor Collaborative Filtering Recommender
-# with matrix factorization by Singular-Value Decomposition (SVD)
- latent_factor_cofi_rec_SVD <- Recommender(
-   data=ratings_train,
-   method='SVD',            # Item-Based Collaborative Filtering
-   parameter=list(
-     categories=30,         # number of latent factors
-     normalize='center',    # normalizing by subtracting average rating per user;
-                            # note that we don't scale by standard deviations here;
-                            # we are assuming people rate on the same scale but have
-                            # different biases
-     method='Pearson'       # use Pearson correlation
-   ))
+# Latent-Factor Collaborative Filtering Recommender SVD
+latent_factor_cofi_rec_SVD <- Recommender(data=getData(e, "train"), method="SVD",parameter=list(categories=30,normalize='center',method='Pearson'))
 
-
- model_svd <- Recommender(data = ratings_train, method = "SVD")
+# SVD with default parameters
+no_para_svd <- Recommender(data=getData(e, "train"), method="SVD")
 ```
-
 
 
 ```{r}
 # compute predicted ratings
 p1 <- predict(latent_factor_cofi_rec_SVD, getData(e, "known"), type="ratings")
-p2 <- predict(model_svd, getData(e, "known"), type="ratings")
+p2 <- predict(no_para_svd, getData(e, "known"), type="ratings")
 
 # aggregate the performance statistics
 error_SVD <- rbind(
   latent_factor_cofi_rec_SVD = calcPredictionAccuracy(p1, getData(e, "unknown")),
-  SVD_C_P = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  no_para_SVD = calcPredictionAccuracy(p2, getData(e, "unknown"))
 )
-kable(error_IPC)
+kable(error_SVD)
 
 ```
+
+
 
 
 
@@ -617,8 +617,7 @@ kable(c_res)
 
 
 ```{r}
-# las = 3: rotate x axis labels to perendicular; las = 1: rotate y axis labels
-barplot(c_res$RMSE, col = "yellow", main = "Barplot of Model RMSE's", las = 2, ylab = "RMSE", horiz = FALSE, names.arg = rownames(c_res), cex.names=.8)
+barplot(c_res$RMSE, col = "yellow", main = "Model RMSEs", las = 2, ylab = "RMSE", horiz = FALSE, names.arg = rownames(c_res), cex.names=.8)
 ```
 
 
@@ -633,8 +632,10 @@ Sys.time() - start_time
 1. Piazza:  https://piazza.com/class/kdf6l5f8bb78j?cid=868
 2. Moviewlens: https://grouplens.org/datasets/movielens/
 3. Dataset README: https://github.com/tonymazn/stat542/tree/main/data/README
-4. Machine Learning Project – Data Science Movie Recommendation System Project in R https://data-flair.training/blogs/data-science-r-movie-recommendation/
+4. Machine Learning Project – Data Science Movie Recommendation System Project in R 
+   https://data-flair.training/blogs/data-science-r-movie-recommendation/
 5. Movie Recommendation System: https://jeknov.shinyapps.io/movieRec/
-6. Item-Based Collaborative Filtering Recommendation: https://www.kaggle.com/hendraherviawan/itembased-collaborative-filter-recommendation-r
+6. Item-Based Collaborative Filtering Recommendation: 
+   https://www.kaggle.com/hendraherviawan/itembased-collaborative-filter-recommendation-r
 7. User-Based and Item-Based Collaborative Filtering https://rpubs.com/jt_rpubs/285729
 8. Movie Recommendation System  https://jeknov.shinyapps.io/movieRec/
