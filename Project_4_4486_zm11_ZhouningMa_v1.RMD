@@ -94,14 +94,14 @@ Genres are pipe-separated and are selected from the following genres:
 * Drama
 * Fantasy
 * Film-Noir
-- Horror
-- Musical
-- Mystery
-- Romance
-- Sci-Fi
-- Thriller
-- War
-- Western
+* Horror
+* Musical
+* Mystery
+* Romance
+* Sci-Fi
+* Thriller
+* War
+* Western
 	
 
 
@@ -451,9 +451,11 @@ UBCF_Z_C <- Recommender(getData(e, "train"), "UBCF", param=list(normalize = "Z-s
 
 ```
 
-### Evaluate the models:
 
 ```{r}
+
+#Evaluate the models:
+
 # compute predicted ratings
 p1 <- predict(UBCF_N_C, getData(e, "known"), type="ratings")
 p2 <- predict(UBCF_C_C, getData(e, "known"), type="ratings")
@@ -724,6 +726,44 @@ anther thing we need to do is the server will shutdown in 1 hour, we need to pin
 
 
 
+## Conclusion
+
+Multiple models were compared on the dataset, the SVD model is the top one performance. System II Collaborative Filtering is an improvement over the 
+System I (content based recommendation system). They can take many classes of input and provide similarity ranking based algorithms to provide the user
+with accurate results. These recommendation systems have evolved over time and have incorporated many advanced techniques to provide users with the content they want.
+
+
+> Conten-Base (9)
+
+* Pros: 
+  + do not use user data, start recommending on day 1
+  + can recommend new and unpopular items
+  + can recommend to users with unique taste
+  + easier to interpret
+      
+* Cons
+  + cannot recommend outside the user's profile
+  + recommend substitute not compliment
+  + finding appropriate features is diffcult
+      
+> Collaborative Filtering (CF)
+
+* Pros:
+  + no need to define features
+  + can recommend outside the user's profile
+  + recommend substitute not compliment
+
+* Cons: 
+  + need enough user data to start, cannot operate on day 1
+  + cannot recommnend new, unrated items
+  + tend to recommend popular items, against the purpose of the personalized RS
+  + cold start problem for new users/items
+      
+The item-base CF performs better in pratice: easier to find similar items, but difficult to find similar people.
+
+
+
+
 
 
 
@@ -742,3 +782,4 @@ Sys.time() - start_time
    https://www.kaggle.com/hendraherviawan/itembased-collaborative-filter-recommendation-r
 7. User-Based and Item-Based Collaborative Filtering https://rpubs.com/jt_rpubs/285729
 8. Movie Recommendation System  https://jeknov.shinyapps.io/movieRec/
+9. Lecure Nov26 https://www.youtube.com/watch?v=QMWydVg-uLg&feature=youtu.be

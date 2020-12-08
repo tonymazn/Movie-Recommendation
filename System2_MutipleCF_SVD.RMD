@@ -1,17 +1,26 @@
 ---
-title: "Project 4: System 2 - User-Based Collaborative Filtering"
-output: html_document
+title: "Project 4: Movie Recommendation Report by ZM11"
+author: Zhouning Ma (ZM11)
+date: '09/07/2020'
+output:
+  html_document: 
+    toc: yes
+  pdf_document: default
+urlcolor: cyan
+
+fontfamily: mathpazo
+fontfamilyoptions: sc, osf
+fontsize: 11pt
+linkcolor: blue
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+***
 
-## reference: https://raw.githubusercontent.com/ChicagoBoothML/MachineLearning_Fall2015/master/Programming%20Scripts/MovieLens%20Movie%20Recommendation/R/MovieLens_MovieRecommendation.Rmd
-## data: https://grouplens.org/datasets/movielens/
+
 
 ```{r include=FALSE}
 start_time <- Sys.time()
+
 
 library(recommenderlab)
 library(ggplot2)
@@ -19,7 +28,21 @@ library(data.table)
 library(reshape2)
 library(knitr)
 
+set.seed(4486)
 ```
+
+
+### Project Overview:
+In this project, we develop content based recommendation system(System I) and collaborative recommendation system(System II).
+
+* **System I:** recommendation based on genres. We know user's favorite genre, we provide two recommendation schemes: 
+   + __Method I:__  highly-rate movies - select the 4-point or more review
+   + __Method II:__ most trendy movies - the newest movie(here is year 2000)
+
+* **System II:** collaborative recommendation system. we provided three collaborative recommendation algorithms: 
+   + __User-based (UBCF):__ we assume that similar users will have similar taste. UBCF uses the logic and recommends items by finding similar users to the user;
+   + __Item-based (IBCF):__ The similarities between different items in the dataset are calculated by using one of a number of similarity measures, and then these similarity values are used to predict;
+   + __Singular value decomposition (SVD):__ It uses a matrix structure where each row represents a user, and each column represents an item. The elements of this matrix are the ratings that are given to items by users.
 
 
 ```{r include=FALSE}
@@ -33,7 +56,7 @@ read <- function(fileName, separators) {
 }
 
 
-basedir ="data/"
+basedir ="data/test/"
 movies = read(paste0(basedir,"movies.dat"), "::")
 ratings = read(paste0(basedir,"ratings.dat"), "::")
 users = read(paste0(basedir, "users.dat"), "::")
@@ -44,140 +67,87 @@ colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
 ```
 
 
+### Dataset: 
+The dataset contains about 1 million ratings and the details as following:
+
+* Number of movies: $`r nrow(movies)`$
+* Number of ratings: $`r nrow(ratings)`$
+* Number of users: $`r nrow(users)`$
+
+The dataset README(3) shows:
+Genres are pipe-separated and are selected from the following genres:
+
+* Action
+* Adventure
+* Animation
+* Children's
+* Comedy
+* Crime
+* Documentary
+* Drama
+* Fantasy
+* Film-Noir
+- Horror
+- Musical
+- Mystery
+- Romance
+- Sci-Fi
+- Thriller
+- War
+- Western
+	
+
+
+
+
+## Create realRatingMatrix
+
 ```{r}
-nrow(movies)
-nrow(ratings)
-nrow(users)
-
-```
-
-```{r}
-#data <- parse_movielens_1m_data()
-#movies <- data$movies
-#users <- data$users
-#ratings <- data$ratings[ , .(user_id, movie_id, rating)]
-#ratings[ , `:=`(user_id = factor(user_id),
-#                movie_id = factor(movie_id))]
-
 ratings <- as(ratings, 'realRatingMatrix')
-
-
-dimnames(ratings)
-ratings
-
 ```
 
+
+## Training and Testing Data
+We split the data into 80% training and 20% testing. 
 
 ```{r}
-train_proportion <- .5
-nb_of_given_ratings_per_test_user <- 10
+train_proportion <- 0.9
+to_keep <- 15  ## given 15 items
+threshold <- 0 ## ratings above 0 as the cutoff point
 
-evaluation_scheme <- evaluationScheme(
-  ratings, 
-  method='split',
-  train=train_proportion,
-  k=1,
-  given=nb_of_given_ratings_per_test_user)
-
-evaluation_scheme
-```
-
-
-- Training data:
-```{r}
-ratings_train <- getData(evaluation_scheme, 'train')
-ratings_train
-```
-
-- Test data: "known"/"given" ratings:
-```{r}
-ratings_test_known <- getData(evaluation_scheme, 'known')
-ratings_test_known
-```
-
-
-- Test data: "unknown" ratings to be predicted and evaluated against:
-```{r}
-ratings_test_unknown <- getData(evaluation_scheme, 'unknown')
-ratings_test_unknown
-```
-
-
-
-```{r}
-recommenderRegistry$get_entry('SVD', dataType='realRatingMatrix')
-```
-
-
-#We train a Latent-Factor CF recommender as follows:
-
-```{r}
-# Latent-Factor Collaborative Filtering Recommender
-# with matrix factorization by Singular-Value Decomposition (SVD)
- latent_factor_cofi_rec_SVD <- Recommender(
-   data=ratings_train,
-   method='SVD',            # Item-Based Collaborative Filtering
-   parameter=list(
-     categories=30,         # number of latent factors
-     normalize='center',    # normalizing by subtracting average rating per user;
-                            # note that we don't scale by standard deviations here;
-                            # we are assuming people rate on the same scale but have
-                            # different biases
-     method='Pearson'       # use Pearson correlation
-   ))
-saveRDS(UBCF_N_C, file = "model/latent_factor_cofi_rec_SVD_model.rds")
-UBCF_N_C1 = readRDS("model/latent_factor_cofi_rec_SVD_model.rds")
-
-latent_factor_cofi_rec_SVD
-
-model_svd <- Recommender(data = ratings_train, method = "SVD")
-saveRDS(UBCF_N_C, file = "model/model_svd_model.rds")
-UBCF_N_C1 = readRDS("model/model_svd_model.rds")
-
-
-model_svd
-
-saveRDS(latent_factor_cofi_rec_SVD, file = "model/latent_factor_cofi_rec_SVD_model.rds")
-saveRDS(model_svd, file = "model/model_svd_model.rds")
-
+# split the data into the training and the test set:
+e <- evaluationScheme(ratings, method="split", train=train_proportion, k=10, given=to_keep, goodRating=threshold)
+#e <- evaluationScheme(ratings, method="split", train=train_proportion, given=to_keep, goodRating=threshold)
+e
 
 ```
-
 
 
 
 ```{r}
 # Latent-Factor Collaborative Filtering Recommender
 # with matrix factorization by Singular-Value Decomposition (SVD)
- latent_factor_cofi_rec_SVD <- Recommender(
-   data=ratings_train,
-   method='SVD',            # Item-Based Collaborative Filtering
-   parameter=list(
-     categories=30,         # number of latent factors
-     normalize='center',    # normalizing by subtracting average rating per user;
-                            # note that we don't scale by standard deviations here;
-                            # we are assuming people rate on the same scale but have
-                            # different biases
-     method='Pearson'       # use Pearson correlation
-   ))
-
-
- model_svd <- Recommender(data = ratings_train, method = "SVD")
+latent_factor_cofi_rec_SVD <- Recommender(data=getData(e, "train"), method="SVD",parameter=list(categories=30,normalize='center',method='Pearson'))
+no_para_svd <- Recommender(data=getData(e, "train"), method="SVD")
 ```
+
 
 
 ```{r}
-latent_factor_cofi_rec_pred <- predict(
-  latent_factor_cofi_rec_SVD,
-  ratings_test_known,
-  type='ratings')
+# compute predicted ratings
+p1 <- predict(latent_factor_cofi_rec_SVD, getData(e, "known"), type="ratings")
+p2 <- predict(no_para_svd, getData(e, "known"), type="ratings")
 
-latent_factor_cofi_red_pred_acc <- calcPredictionAccuracy(
-   latent_factor_cofi_rec_pred,
-   ratings_test_unknown)
+# aggregate the performance statistics
+error_SVD <- rbind(
+  latent_factor_cofi_rec_SVD = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  SVD_C_P = calcPredictionAccuracy(p2, getData(e, "unknown"))
+)
+kable(error_SVD)
 
-latent_factor_cofi_red_pred_acc
 ```
+
+
 
 
 
@@ -186,3 +156,12 @@ latent_factor_cofi_red_pred_acc
 Sys.time() - start_time
 ```
 
+## Reference: 
+1. Piazza:  https://piazza.com/class/kdf6l5f8bb78j?cid=868
+2. Moviewlens: https://grouplens.org/datasets/movielens/
+3. Dataset README: https://github.com/tonymazn/stat542/tree/main/data/README
+4. Machine Learning Project – Data Science Movie Recommendation System Project in R https://data-flair.training/blogs/data-science-r-movie-recommendation/
+5. Movie Recommendation System: https://jeknov.shinyapps.io/movieRec/
+6. Item-Based Collaborative Filtering Recommendation: https://www.kaggle.com/hendraherviawan/itembased-collaborative-filter-recommendation-r
+7. User-Based and Item-Based Collaborative Filtering https://rpubs.com/jt_rpubs/285729
+8. Movie Recommendation System  https://jeknov.shinyapps.io/movieRec/

@@ -1,0 +1,118 @@
+---
+title: "Project 4: System 2 - User-Based Collaborative Filtering"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## reference: https://raw.githubusercontent.com/ChicagoBoothML/MachineLearning_Fall2015/master/Programming%20Scripts/MovieLens%20Movie%20Recommendation/R/MovieLens_MovieRecommendation.Rmd
+## data: https://grouplens.org/datasets/movielens/
+
+```{r include=FALSE}
+start_time <- Sys.time()
+
+library(recommenderlab)
+library(ggplot2)
+library(data.table)
+library(reshape2)
+library(knitr)
+
+```
+
+
+```{r include=FALSE}
+read <- function(fileName, separators) {
+    data <- readLines(con <- file(fileName))
+    close(con)
+    records <- sapply(data, strsplit, split=separators)
+    dataFrame <- data.frame(t(sapply(records,c)))
+    rownames(dataFrame) <- 1: nrow(dataFrame)
+    return(as.data.frame(dataFrame,stringsAsFactors = FALSE))
+}
+
+
+basedir ="data/"
+movies = read(paste0(basedir,"movies.dat"), "::")
+ratings = read(paste0(basedir,"ratings.dat"), "::")
+users = read(paste0(basedir, "users.dat"), "::")
+colnames(movies) = c('MovieID', 'title', 'genres')
+colnames(ratings) = c('UserID', 'MovieID', 'Rating', 'Timestamp')
+colnames(users) = c('UserID', 'Gender', 'Age', 'Occupation', 'Zip-code')
+
+```
+
+
+```{r}
+nrow(movies)
+nrow(ratings)
+nrow(users)
+
+```
+
+```{r}
+#data <- parse_movielens_1m_data()
+#movies <- data$movies
+#users <- data$users
+#ratings <- data$ratings[ , .(user_id, movie_id, rating)]
+#ratings[ , `:=`(user_id = factor(user_id),
+#                movie_id = factor(movie_id))]
+
+ratings <- as(ratings, 'realRatingMatrix')
+```
+
+```{r}
+train_proportion <- .8
+nb_of_given_ratings_per_test_user <- 10
+
+#evaluation_scheme <- evaluationScheme(ratings, method='split', train=train_proportion, k=1, given=nb_of_given_ratings_per_test_user)
+# split the data into the training and the test set:
+e <- evaluationScheme(ratings, method="split", train=train_proportion, given=15, goodRating=0)
+e
+```
+
+
+
+# 6.Item-Based Collaborative Filtering: Pearson Correlation
+```{r}
+#train IBCF pearson correlation models
+
+# non-normalized
+IBCF_N_P <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = NULL, method="pearson"))
+saveRDS(UBCF_N_C, file = "model/IBCF_N_P_model.rds")
+UBCF_N_C1 = readRDS("model/IBCF_N_P_model.rds")
+
+# centered
+IBCF_C_P <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "center",method="pearson"))
+saveRDS(UBCF_N_C, file = "model/IBCF_C_P_model.rds")
+UBCF_N_C1 = readRDS("model/IBCF_C_P_model.rds")
+
+# Z-score normalization
+IBCF_Z_P <- Recommender(getData(e, "train"), "IBCF", param=list(normalize = "Z-score",method="pearson"))
+saveRDS(UBCF_N_C, file = "model/IBCF_Z_P_model.rds")
+UBCF_N_C1 = readRDS("model/IBCF_Z_P_model.rds")
+
+```
+
+
+```{r}
+# compute predicted ratings
+p1 <- predict(IBCF_N_P, getData(e, "known"), type="ratings")
+p2 <- predict(IBCF_C_P, getData(e, "known"), type="ratings")
+p3 <- predict(IBCF_Z_P, getData(e, "known"), type="ratings")
+
+# aggregate the performance statistics
+error_IPC <- rbind(
+  IBCF_N_P = calcPredictionAccuracy(p1, getData(e, "unknown")),
+  IBCF_C_P = calcPredictionAccuracy(p2, getData(e, "unknown")),
+  IBCF_Z_P = calcPredictionAccuracy(p3, getData(e, "unknown"))
+)
+kable(error_IPC)
+
+```
+
+```{r}
+Sys.time() - start_time
+```
+
