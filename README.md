@@ -17,35 +17,75 @@ System Structure
 
 
     .
-    ├─ cs410-master 
-    │    └─── web
-    │          ├── templates
-    │          │     └── index.html
-    │          ├── __init__.py
-    │          └── webserver.py                  # Flask 1.0.2(2) entrance point
-    ├── core
-    │     ├── __init__.py
-    │     ├── algorithms.py
-    │     ├── preprocess.py
-    │     ├── summarizer.py                      # Main function to generate summary result by using bs4(3) and SUMY(4)
-    │     └── textsummarize.py                   # Pass summary result service for web 
-    ├── tests 
-    │     ├───── ROUGE_result                    # Create measure scores by pyrouge 0.1.3(5)
-    │     │         ├── LexRank.txt              # Lex Rank algorithm test log
-    │     │         ├── LAS.txt                  # LAS algorithm test log 
-    │     │         ├── Luhn.txt                 # Luhn algorithm test log 
-    │     │         ├── TextRank.txt             # Text Rank algorithm test log 
-    │     │         └── ROUGE measure scores.pdf # ROUGE measure scores report 
-    │     ├── __init__.py
-    │     ├── evaluation.py
-    │     ├── runsystem.py                       # Generate summary system data
-    │     ├── settting.ini 
-    │     └── utils.py
-    ├─ README.md
-	├─ User Manual.pdf                           # User Manual
-	├─ requirements.txt
-    ├─ setup.cfg
-    └─ setup.py
+    ├─ app                                          # A Movie Recommendation App
+    │   ├── data                                    # data folder
+    │   │     ├── README                            # Movielens data readme
+    │   │     ├── aggr.dat                          # each movie with its rates meaning
+    │   │     ├── aggr200.dat                       # randamly pick 200 movies from aggr.dat,not in used
+    │   │     ├── movies.dat                        # Movielens 1M dataset movies
+    │   │     ├── movies_clean.dat                  # remove the movies without rating record
+    │   │     ├── ratings.dat                       # Movielens 1M dataset ratings
+    │   │     └── users.dat                         # Movielens 1M dataset users.dat
+    │   ├── functions                               # utility folder
+    │   ├── model                                   # pretrain models
+    │   ├── www                                     # css and images folder
+    │   ├── app.R                                   # Shiny app
+    │   ├── run.bat                                 # windows run template
+    │   └── setting.txt                             # site setting
+    │
+    ├── archive                                     # test/temporary/function code   
+    │
+    ├── data                                      
+    │     ├── ml-1m                                 # Movielens 1M data
+    │     ├── ml-latest-small                       # Movielens 1M small data
+    │     ├── test                                  # test data
+    │     ├── train                                 # train data
+    │     ├── README                                # Movielens data readme
+    │     ├── movies.dat                            # Movielens 1M dataset movies
+    │     ├── movies_clean.dat                   
+    │     ├── newratings.dat                     
+    │     ├── newratings1.dat                    
+    │     ├── newratings2.dat
+    │     ├── ratings.dat                           # Movielens 1M dataset ratings
+    │     └── users.dat                             # Movielens 1M dataset users
+    │
+    ├── model 
+    │     ├── IBCF_C_C_model.rds                    # pretrain model IBCF normalize = "center",method="Cosine"
+    │     ├── IBCF_C_E_model.rds                    # pretrain model IBCF normalize = "center",method="Euclidean"
+    │     ├── IBCF_C_P_model.rds                    # pretrain model IBCF normalize = "center",method="pearson"
+    │     ├── IBCF_N_C_model.rds                    # pretrain model IBCF normalize = NULL, method="Cosine"
+    │     ├── IBCF_N_E_model.rds                    # pretrain model IBCF normalize = NULL, method="Euclidean"
+    │     ├── IBCF_N_P_model.rds                    # pretrain model IBCF normalize = NULL, method="pearson"
+    │     ├── IBCF_Z_C_model.rds                    # pretrain model IBCF normalize = "Z-score",method="Cosine"
+    │     ├── IBCF_Z_E_model.rds                    # pretrain model IBCF normalize = "Z-score",method="Euclidean"
+    │     ├── IBCF_Z_P_model.rds                    # pretrain model IBCF normalize = "Z-score",method="pearson"
+    │     ├── UBCF_C_C_model.rds                    # pretrain model UBCF normalize = "center",method="Cosine"
+    │     ├── UBCF_C_E_model.rds                    # pretrain model UBCF normalize = "center",method="Euclidean"
+    │     ├── UBCF_C_P_model.rds                    # pretrain model UBCF normalize = "center",method="pearson"
+    │     ├── UBCF_N_C_model.rds                    # pretrain model UBCF normalize = NULL, method="Cosine"
+    │     ├── UBCF_N_E_model.rds                    # pretrain model UBCF normalize = NULL, method="Euclidean"
+    │     ├── UBCF_N_P_model.rds                    # pretrain model UBCF normalize = NULL, method="pearson"
+    │     ├── UBCF_Z_C_model.rds                    # pretrain model UBCF normalize = "Z-score",method="Cosine"
+    │     ├── UBCF_Z_E_model.rds                    # pretrain model UBCF normalize = "Z-score",method="Euclidean"
+    │     ├── UBCF_Z_P_model.rds                    # pretrain model UBCF normalize = "Z-score",method="pearson"
+    │     ├── latent_factor_cofi_rec_SVD_model.rds  # SVD categories=30,normalize='center',method='Pearson'
+    │     └── svd_model.rds                         # SVD default parameter
+    │
+    ├─ GenerateData.RMD                             # split the data into train/test dataset 
+    ├─ GenerateData.html                            # split the data into train/test dataset run result
+    ├─ LICENSE                                      # project license file
+    ├─ Project4.Rproj                               # Project file
+    ├─ Project_4_4486_zm11_Zhouningma_v..           # Project report markdown file
+    ├─ Project_4_4486_zm11_Zhouningma_v..           # Project report hmtl file
+    ├─ README.md                                    # this file
+    ├─ System1.RMD                                  # System I test markdown file
+    ├─ System1.html                                 # System I test result
+    ├─ System2_MutipleCF.RMD                        # System II test markdown file
+    ├─ System2_MutipleCF.html                       # System II test result
+    ├─ System2_MutipleCF_SVD.RMD                    # System II SVD test markdown file
+    ├─ System2_MutipleCF_SVD.html                   # System II SVD test result
+    ├─ Test.RMD                                     # other test markdown file
+    └─ Test.html                                    # other test result
     
     
 Version
