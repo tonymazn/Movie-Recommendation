@@ -700,22 +700,22 @@ it will load the .rds to the model object. it will be very fast. We save all the
 
 ## Technical details
 
-- Will you normalize the rating matrix? If so, which normalization option you use?
+- Will you normalize the rating matrix? If so, which normalization option you use?\
   We let the recommenderlab do the normalization, some of our models have setting of normalization option, such as: 'center',"Z-score".
 
-- What's the nearest neighborhood size you use?
-  The recommenderlab's k = 3 nearest neightbors(u1, u2 and u3) are selected[9].
+- What's the nearest neighborhood size you use?\
+  The recommenderlab's k = 3 nearest neighbors(u1, u2 and u3) are selected[9].
 
-- Which similarity metric you use?
+- Which similarity metric you use?\
   Pearson Correlation, Cosine Similarity, Euclidean Distance.
   
-- If you say prediction is based on a "weighted average", then explain what weights you use
+- If you say prediction is based on a "weighted average", then explain what weights you use\
   The prediction we are using on content-based algorithm(System I) is not based on a 'weighted average'.
 
-- Will you still have missing values after running the algorithm? If so, how you handle those missing values?
-  Based on [9]: if we assume users favor only a small fraction of the items and most items with not rating, this lead to the problem that
-  we cannot compute similarities using Pearson correlation or Cosine similarity, A similarity measure which only fouces on matching ones 
-  and thus prevents the problem with zeroes is the Jaccard index.
+- Will you still have missing values after running the algorithm? If so, how you handle those missing values?\
+  Sometimes we do see missing values, I check the Michael Hahsler's document[9], he provided a solution: if we assume users favor only a small fraction of the items and most items with not rating, this lead to the problem that we cannot compute similarities using Pearson correlation or Cosine similarity, A similarity measure which only focuses on matching ones and thus prevents the problem with zeroes is the Jaccard index.
+
+
 
 ## Movie Recommendation App
 
