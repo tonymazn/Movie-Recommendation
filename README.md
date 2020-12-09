@@ -2,17 +2,27 @@ STAT542 Project 4 - Movie Recommendation
 -
 In this project, we develop content based recommendation system(System I) and collaborative recommendation system(System II) (1).
 
+* System I: recommendation based on genres. We know user’s favorite genre, we provide two recommendation schemes:
+  - Method I: highly-rate movies - select the 4-point or more review
+  - Method II: most trendy movies - the newest movie(here is year 2000)
+
+* System II: collaborative recommendation system. we provided three collaborative recommendation algorithms:
+  - User-based (UBCF): we assume that similar users will have similar taste. UBCF uses the logic and recommends items by finding similar users to the user;
+  - Item-based (IBCF): The similarities between different items in the dataset are calculated by using one of a number of similarity measures, and then these similarity values are used to predict;
+Singular value decomposition (SVD): It uses a matrix structure where each row represents a user, and each column represents an item. The elements of this matrix are the ratings that are given to items by users.
+
 
 The DEMO sites
 -
 
-    http://cs598.eastus.cloudapp.azure.com/
+    * [Primary site](http://cs598.eastus.cloudapp.azure.com)
 
 
     or
 
 
-    http://project4.westus.cloudapp.azure.com/
+    * [backup site](http://project4.westus.cloudapp.azure.com)
+    
     
     
 System Structure
