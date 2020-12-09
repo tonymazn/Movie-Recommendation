@@ -347,7 +347,7 @@ system I is content based recommendation system, let's say we know the user's fa
 
 ### Method I: highly-rate movies
 
-  We calculate the average point of each movie and randomly pick N movies which average point is great than 3-point(4-point or 5-point) in the genres. 
+  We calculate the average point of each movie and randomly pick N movies which average point is great or equal to 4-point in the genres. 
 
 
 ```{r}
@@ -428,7 +428,7 @@ We will train CF models by difference parameters [7][8]:
 
 - normalize: NULL, center or Z-score;
 
-- method: Cosine, Euclidean pearson
+- method: Cosine, Euclidean and Pearson
 
 also, we will train two SVD models with difference parameter, total **20 models:**, we will calculate prediction accuracy as well, the following are the examples:
 
@@ -696,12 +696,13 @@ It looks like the SVDs' performance(prediction accuracy) are better than User-ba
 
 #### Save pre-trained models
 It takes time to train a model with large data, to save time for the App, we will store the model object to  .rds format, when the system starts, 
-it will load the .rds to the model object. it will be very fast. We save all the models we tested, it is around 20 models.
+it will load the .rds to the model object, there are total around 20 models.
+
 
 ## Technical details
 
 - Will you normalize the rating matrix? If so, which normalization option you use?\
-  We let the recommenderlab do the normalization, some of our models have setting of normalization option, such as: 'center',"Z-score".
+  We let the recommenderlab do the normalization, some of our models have setting of normalization option, such as: 'center','Z-score'.
 
 - What's the nearest neighborhood size you use?\
   The recommenderlab's k = 3 nearest neighbors(u1, u2 and u3) are selected[9].
@@ -713,28 +714,27 @@ it will load the .rds to the model object. it will be very fast. We save all the
   The prediction we are using on content-based algorithm(System I) is not based on a 'weighted average'.
 
 - Will you still have missing values after running the algorithm? If so, how you handle those missing values?\
-  Sometimes we do see missing values, I check the Michael Hahsler's document[9], he provided a solution: if we assume users favor only a small fraction of the items and most items with not rating, this lead to the problem that we cannot compute similarities using Pearson correlation or Cosine similarity, A similarity measure which only focuses on matching ones and thus prevents the problem with zeroes is the Jaccard index.
-
+  Sometimes we do see missing values, I check the Michael Hahsler's document[9], he provided a solution: if we assume users favor only a small fraction of the items and most items with not rating, this lead to the problem that we cannot compute similarities using Pearson correlation or Cosine similarity, a similarity measure which only focuses on matching ones and thus prevents the problem with zeroes is the Jaccard index.
 
 
 ## Movie Recommendation App
 
-  * it is a shiny app with System I and System II algorithms
-  * System I
-    + the app needs to take the input from users on their favorite genres, and display the result
-    + system will provide two methods for System I (you are able to select any of them by the setting)
+  * It is a shiny app with System I and System II algorithms
+  * System I (content based)
+    + The app needs to take the input from users of their favorite genres, and display the result
+    + System will provide two methods for System I (you are able to select any of them by the setting)
   
- * System II 
-   + the app need the users to rate many movies as possible;
-   + system will discover movies for the users by User-based or Item-based Collaborative Filtering models or SVD models
+ * System II (Collaborative Filtering)
+   + The app need the users to rate as many movies as possible;
+   + System will discover movies for the users by User-based or Item-based Collaborative Filtering models or SVD models
 
  * Setting
-   + select the algorithm for System I
-   + select the algorithm for System II
+   + Select the algorithm for System I
+   + Select the algorithm for System II
 
 
 ## Deploy the App
-it is a huge challenge to deploy to Shiny server, it doesn't support the dataset like us(1M rows), but we found a way finally to make it successfully, 
+it is a huge challenge to deploy to Shiny server on Linux, it doesn't support the big dataset like us(1M rows), but we found a way finally to make it working successfully, 
 we are able to running the App on the full dataset, but it is not for production, it is ok for the proof of concept. We found it is stable when we work
 RStudio on windows environment, why don't we use this one to demonstrate? Once we are able to change the web server port to 80, then we are able to host.
 We run the following code on RStudio console:
@@ -742,18 +742,18 @@ We run the following code on RStudio console:
 **runApp('app', host = "0.0.0.0", port = 80)**
 
 
-anther thing we need to do is the server will shutdown in 1 hour, we need to ping(wget can do this job) it every 10 minutes.
+anther thing we need to do is the server will shutdown in 1 hour, we need to ping(wget can do the job) it every 10 minutes.
 
 
 
 ## Conclusion
 
-Multiple models were compared on the dataset, the SVD model is the top one performance. System II Collaborative Filtering is an improvement over the 
+Multiple models were compared on the dataset, the SVD model is the best performance in our models of System II , and System II Collaborative Filtering is an improvement over the 
 System I (content based recommendation system). They can take many classes of input and provide similarity ranking based algorithms to provide the user
 with accurate results. These recommendation systems have evolved over time and have incorporated many advanced techniques to provide users with the content they want.
 
 
-> Conten-Base [10]
+> Content-Based [10]
 
 * Pros: 
   + do not use user data, start recommending on day 1
@@ -764,7 +764,7 @@ with accurate results. These recommendation systems have evolved over time and h
 * Cons
   + cannot recommend outside the user's profile
   + recommend substitute not compliment
-  + finding appropriate features is diffcult
+  + finding appropriate features is difficult
       
 > Collaborative Filtering (CF)
 
@@ -775,11 +775,11 @@ with accurate results. These recommendation systems have evolved over time and h
 
 * Cons: 
   + need enough user data to start, cannot operate on day 1
-  + cannot recommnend new, unrated items
+  + cannot recommend new, unrated items
   + tend to recommend popular items, against the purpose of the personalized RS
   + cold start problem for new users/items
       
-The item-base CF performs better in pratice: easier to find similar items, but difficult to find similar people.
+The item-base CF performs better in practice: easier to find similar items, but difficult to find similar people.
 
 
 
