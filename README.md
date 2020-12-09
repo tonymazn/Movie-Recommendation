@@ -34,7 +34,7 @@ System Structure
     │   ├── data                                    # data folder
     │   │     ├── README                            # Movielens data readme
     │   │     ├── aggr.dat                          # each movie with its rates meaning
-    │   │     ├── aggr200.dat                       # randamly pick 200 movies from aggr.dat,not in used
+    │   │     ├── aggr200.dat                       # randamly pick 200 movies from aggr.dat,not in use
     │   │     ├── movies.dat                        # Movielens 1M dataset movies
     │   │     ├── movies_clean.dat                  # remove the movies without rating record
     │   │     ├── ratings.dat                       # Movielens 1M dataset ratings
