@@ -15,13 +15,13 @@ Singular value decomposition (SVD): It uses a matrix structure where each row re
 The DEMO sites
 -
 
-    * [Primary site](http://cs598.eastus.cloudapp.azure.com)
+[Primary site](http://cs598.eastus.cloudapp.azure.com)
 
 
     or
 
 
-    * [backup site](http://project4.westus.cloudapp.azure.com)
+[backup site](http://project4.westus.cloudapp.azure.com)
     
     
     
