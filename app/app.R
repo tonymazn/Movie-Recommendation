@@ -25,7 +25,7 @@ systemII_AlgorithmKey = "SystemII_Algorithm"
 modelpath = paste0("model/", getSetting(setting, systemII_AlgorithmKey)  ,"_model.rds")
 defaultmodelpath = "model/No_Para_SVD_model.rds"
 databasepath ="data/"
-moviesListFileName = "aggr200.dat"
+moviesListFileName = "aggr.dat"
 numberofmovierecommend = 4 * 6
 trendyYear = 2000
 
