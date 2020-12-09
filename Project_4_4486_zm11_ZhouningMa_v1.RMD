@@ -1,7 +1,7 @@
 ---
 title: "Project 4: Movie Recommendation Report"
 author: Zhouning Ma (ZM11)
-date: '09/07/2020'
+date: 'Dec 08,2020'
 output:
   html_document: 
     toc: yes
@@ -30,7 +30,7 @@ library(knitr)
 
 
 ### Project Overview
-In this project, we develop content based recommendation system(System I) and collaborative recommendation system(System II) (1).
+In this project, we develop content based recommendation system(System I) and collaborative recommendation system(System II) [1].
 
 * **System I:** recommendation based on genres. We know user's favorite genre, we provide two recommendation schemes: 
    + __Method I:__  highly-rate movies - select the 4-point or more review
@@ -53,8 +53,8 @@ read <- function(fileName, separators) {
 }
 
 
-#basedir ="data/test/"
-basedir ="data/"
+basedir ="data/test/"
+#basedir ="data/"
 movies = read(paste0(basedir,"movies.dat"), "::")
 ratings = read(paste0(basedir,"ratings.dat"), "::")
 users = read(paste0(basedir, "users.dat"), "::")
@@ -75,13 +75,13 @@ genre_list <- c("Action", "Adventure", "Animation", "Children",
 
 
 ### Dataset
-The dataset(2) contains about 1 million ratings and the details as following:
+The dataset[2] contains about 1 million ratings and the details as following:
 
 * Number of movies: $`r nrow(movies)`$
 * Number of ratings: $`r nrow(ratings)`$
 * Number of users: $`r nrow(users)`$
 
-The dataset README(3) shows:
+The dataset README[3] shows:
 Genres are pipe-separated and are selected from the following genres:
 
 * Action
@@ -276,7 +276,7 @@ image(as.matrix(similarity_items), main = "Item similarity")
 ```
 
 
-### Most Viewed Movies Visualization (4)(5) 
+### Most Viewed Movies Visualization [4][5] 
 
 ```{r include=FALSE}
 
@@ -341,29 +341,6 @@ image(ratingmat_norm[rowCounts(ratingmat_norm) > quantile(rowCounts(ratingmat_no
 
 ```
 
-
-## Create realRatingMatrix
-
-```{r}
-ratings <- as(ratings, 'realRatingMatrix')
-```
-
-
-## Training and Testing Data
-We split the data into 80% training and 20% testing. 
-
-```{r}
-train_proportion <- 0.8
-to_keep <- 15  ## given 15 items
-threshold <- 0 ## ratings above 0 as the cutoff point
-
-# split the data into the training and the test set:
-e <- evaluationScheme(ratings, method="split", train=train_proportion, k=10, given=to_keep, goodRating=threshold)
-e
-
-```
-
-
 ## System I
 
 system I is content based recommendation system, let's say we know the user's favorite genres, we will recommend movies based on genres. 
@@ -392,7 +369,7 @@ system I is content based recommendation system, let's say we know the user's fa
 
 ```
   
-  
+
   
 ### Method II:most trendy movies
 
@@ -419,9 +396,35 @@ system I is content based recommendation system, let's say we know the user's fa
 ```
 
 
-## Train User-based and Item-based Collaborative Filtering models
 
-We will train CF models by difference parameters (7,8):
+## System II
+
+### Create realRatingMatrix
+
+```{r}
+ratings <- as(ratings, 'realRatingMatrix')
+```
+
+
+### Training and Testing Data
+We split the data into 80% training and 20% testing. 
+
+```{r}
+train_proportion <- 0.8
+folds <-10
+to_keep <- 15  ## given 15 items
+threshold <- 0 ## ratings above 0 as the cutoff point
+
+# split the data into the training and the test set:
+e <- evaluationScheme(ratings, method="split", train=train_proportion, k=folds, given=to_keep, goodRating=threshold)
+e
+
+```
+  
+
+### Train User-based and Item-based Collaborative Filtering models
+
+We will train CF models by difference parameters [7][8]:
 
 - normalize: NULL, center or Z-score;
 
@@ -430,7 +433,7 @@ We will train CF models by difference parameters (7,8):
 also, we will train two SVD models with difference parameter, total **20 models:**, we will calculate prediction accuracy as well, the following are the examples:
 
 
-### User-Based Collaborative Filtering: Cosine Similarity
+#### User-Based Collaborative Filtering: Cosine Similarity
 
    + UBCF_N_C : The raw data is used with no normalization applied;
 
@@ -471,7 +474,7 @@ kable(error_UCOS)
 ```
 
 
-### User-Based Collaborative Filtering: Euclidean Distance
+#### User-Based Collaborative Filtering: Euclidean Distance
 
 ```{r}
 # train UBCF Euclidean Distance models
@@ -504,7 +507,7 @@ error_UEUC <- rbind(
 kable(error_UEUC)
 ```
 
-### User-Based Collaborative Filtering: Pearson Correlation
+#### User-Based Collaborative Filtering: Pearson Correlation
 
 ```{r}
 #train UBCF pearson correlation models
@@ -537,7 +540,7 @@ kable(error_UPC)
 ```
 
 
-### Item-Based Collaborative Filtering: Cosine Similarity
+#### Item-Based Collaborative Filtering: Cosine Similarity
 
 ```{r}
 #train IBCF cosine similarity models
@@ -572,7 +575,7 @@ kable(error_ICOS)
 
 ```
 
-### Item-Based Collaborative Filtering: Euclidean Distance
+#### Item-Based Collaborative Filtering: Euclidean Distance
 
 ```{r}
 #train IBCF Euclidean Distance models
@@ -604,7 +607,7 @@ kable(error_IEUC)
 ```
 
 
-### Item-Based Collaborative Filtering: Pearson Correlation
+#### Item-Based Collaborative Filtering: Pearson Correlation
 
 ```{r}
 #train IBCF pearson correlation models
@@ -638,7 +641,7 @@ kable(error_IPC)
 ```
 
 
-## SVD models
+#### SVD models
 
 - One is Latent-Factor Collaborative Filtering Recommender
 - SVD with default parameter, we call it no-para
@@ -687,15 +690,32 @@ barplot(c_res$RMSE, col = "yellow", main = "Model RMSEs", las = 2, ylab = "RMSE"
 ```
 
 
-
-
-## Evaluation result
+#### Evaluation result
 It looks like the SVDs' performance(prediction accuracy) are better than User-based and Item-based Collaborative Filtering. 
 
 
-## Save pre-trained models
+#### Save pre-trained models
 It takes time to train a model with large data, to save time for the App, we will store the model object to  .rds format, when the system starts, 
 it will load the .rds to the model object. it will be very fast. We save all the models we tested, it is around 20 models.
+
+## Technical details
+
+- Will you normalize the rating matrix? If so, which normalization option you use?
+  We let the recommenderlab do the normalization, some of our models have setting of normalization option, such as: 'center',"Z-score".
+
+- What's the nearest neighborhood size you use?
+  The recommenderlab's k = 3 nearest neightbors(u1, u2 and u3) are selected[9].
+
+- Which similarity metric you use?
+  Pearson Correlation, Cosine Similarity, Euclidean Distance.
+  
+- If you say prediction is based on a "weighted average", then explain what weights you use
+  The prediction we are using on content-based algorithm(System I) is not based on a 'weighted average'.
+
+- Will you still have missing values after running the algorithm? If so, how you handle those missing values?
+  Based on [9]: if we assume users favor only a small fraction of the items and most items with not rating, this lead to the problem that
+  we cannot compute similarities using Pearson correlation or Cosine similarity, A similarity measure which only fouces on matching ones 
+  and thus prevents the problem with zeroes is the Jaccard index.
 
 ## Movie Recommendation App
 
@@ -733,7 +753,7 @@ System I (content based recommendation system). They can take many classes of in
 with accurate results. These recommendation systems have evolved over time and have incorporated many advanced techniques to provide users with the content they want.
 
 
-> Conten-Base (9)
+> Conten-Base [10]
 
 * Pros: 
   + do not use user data, start recommending on day 1
@@ -782,4 +802,6 @@ Sys.time() - start_time
    https://www.kaggle.com/hendraherviawan/itembased-collaborative-filter-recommendation-r
 7. User-Based and Item-Based Collaborative Filtering https://rpubs.com/jt_rpubs/285729
 8. Movie Recommendation System  https://jeknov.shinyapps.io/movieRec/
-9. Lecure Nov26 https://www.youtube.com/watch?v=QMWydVg-uLg&feature=youtu.be
+9. Michael Hahsler: recommenderlab: A Framework for Developing and Testing Recommendation Algorithms 
+    https://cran.r-project.org/web/packages/recommenderlab/vignettes/recommenderlab.pdf
+10. Lecure Nov26 https://www.youtube.com/watch?v=QMWydVg-uLg&feature=youtu.be
