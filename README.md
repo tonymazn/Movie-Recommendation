@@ -6,13 +6,13 @@ In this project, we develop content based recommendation system(System I) and co
 The DEMO sites
 -
 
-    [project 4 master site](http://cs598.eastus.cloudapp.azure.com/)
+    http://cs598.eastus.cloudapp.azure.com/
 
 
     or
 
 
-    [project 4 backup site](http://project4.westus.cloudapp.azure.com/)
+    http://project4.westus.cloudapp.azure.com/
     
     
 System Structure
