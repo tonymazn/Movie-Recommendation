@@ -6,11 +6,14 @@ In this project, we develop content based recommendation system(System I) and co
 The DEMO sites
 -
 
-    [Demo 1](http://cs598.eastus.cloudapp.azure.com/)
+    http://cs598.eastus.cloudapp.azure.com/
 
     or
 
-    [Demo 2](http://project4.westus.cloudapp.azure.com/)
+    http://project4.westus.cloudapp.azure.com/
+    
+    
+    [https://github.com/davelogear/davelogear.github.io/blob/master/davelogear.github.io](https://github.com/davelogear/davelogear.github.io/blob/master/davelogear.github.io)
     
     
 System Structure
