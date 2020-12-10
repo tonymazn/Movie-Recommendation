@@ -53,8 +53,8 @@ read <- function(fileName, separators) {
 }
 
 
-basedir ="data/test/"
-#basedir ="data/"
+#basedir ="data/test/"
+basedir ="data/"
 movies = read(paste0(basedir,"movies.dat"), "::")
 ratings = read(paste0(basedir,"ratings.dat"), "::")
 users = read(paste0(basedir, "users.dat"), "::")
