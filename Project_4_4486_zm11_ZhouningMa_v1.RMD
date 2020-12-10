@@ -1,7 +1,7 @@
 ---
 title: "Project 4: Movie Recommendation Report"
 author: Zhouning Ma (ZM11)
-date: 'Dec 08,2020'
+date: 'Dec 11,2020'
 output:
   html_document: 
     toc: yes
@@ -643,8 +643,8 @@ kable(error_IPC)
 
 #### SVD models
 
-- One is Latent-Factor Collaborative Filtering Recommender
-- SVD with default parameter, we call it no-para
+- Latent-Factor Collaborative Filtering Recommender SVD
+- SVD with default parameter, we call it no-para SVD
 
 ```{r}
 # Latent-Factor Collaborative Filtering Recommender SVD
