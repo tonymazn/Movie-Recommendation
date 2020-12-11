@@ -117,8 +117,10 @@ System Structure
     ├─ GenerateData.html                            # split the data into train/test dataset run result
     ├─ LICENSE                                      # project license file
     ├─ Project4.Rproj                               # Project file
-    ├─ Project_4_4486_zm11_Zhouningma_v..           # Project report markdown file
-    ├─ Project_4_4486_zm11_Zhouningma_v..           # Project report hmtl file
+    ├─ Project_4_4486_zm11_Zhouningma_v..           # Project report markdown file v1
+    ├─ Project_4_4486_zm11_Zhouningma_v..           # Project report markdown file v2
+    ├─ Project_4_4486_zm11_Zhouningma_v..           # Project report markdown file v3
+    ├─ Project_4_4486_zm11_Zhouningma_v..           # Project report hmtl file  
     ├─ README.md                                    # this file
     ├─ System1.RMD                                  # System I test markdown file
     ├─ System1.html                                 # System I test result
