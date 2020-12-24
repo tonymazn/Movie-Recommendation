@@ -12,18 +12,7 @@ In this project, we develop content based recommendation system(System I) and co
 Singular value decomposition (SVD): It uses a matrix structure where each row represents a user, and each column represents an item. The elements of this matrix are the ratings that are given to items by users.
 
 
-The DEMO sites
--
-
-[Primary site](http://project4.westus.cloudapp.azure.com)
-
-
-    or
-
-
-[backup site](http://cs598.eastus.cloudapp.azure.com)
-    
-    
+  
     
 System Structure
 - 
@@ -139,10 +128,6 @@ Version
 Team Member
 -
 Zhouning Ma
-
-NetID
--
-ZM11
 
 License
 -
