@@ -9,7 +9,7 @@ In this project, we develop content based recommendation system(System I) and co
 * System II: collaborative recommendation system. we provided three collaborative recommendation algorithms:
   - User-based (UBCF): we assume that similar users will have similar taste. UBCF uses the logic and recommends items by finding similar users to the user;
   - Item-based (IBCF): The similarities between different items in the dataset are calculated by using one of a number of similarity measures, and then these similarity values are used to predict;
-Singular value decomposition (SVD): It uses a matrix structure where each row represents a user, and each column represents an item. The elements of this matrix are the ratings that are given to items by users.
+  - Singular value decomposition (SVD): It uses a matrix structure where each row represents a user, and each column represents an item. The elements of this matrix are the ratings that are given to items by users.
 
 
   
